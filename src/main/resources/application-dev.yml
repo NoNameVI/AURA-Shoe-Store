@@ -1,17 +1,28 @@
+# Shared development profile committed to Git.
+#
+# Per-developer values must be supplied with environment variables in IntelliJ:
+#   AURA_DB_URL      - change when host, port, or database name differs
+#   AURA_DB_USERNAME - change when the local MySQL user differs
+#   AURA_DB_PASSWORD - required; never commit the real password
+#
+# Alternative: copy application-local.yml.example to application-local.yml and
+# activate profiles "dev,local". application-local.yml is ignored by Git.
 spring:
   config:
     activate:
       on-profile: dev
 
   datasource:
-    url: "${AURA_DB_URL:jdbc:mysql://localhost:3306/aura_store_core?useUnicode=true&characterEncoding=UTF-8&connectionTimeZone=UTC&sslMode=DISABLED&allowPublicKeyRetrieval=true}"
+    # The updated SQL schema is named "aura_store" (not "aura_store_core").
+    # sslMode=DISABLED is for local development only.
+    url: "${AURA_DB_URL:jdbc:mysql://localhost:3306/aura_store?useUnicode=true&characterEncoding=UTF-8&connectionTimeZone=UTC&sslMode=DISABLED&allowPublicKeyRetrieval=true}"
     username: "${AURA_DB_USERNAME:aura_app}"
     password: "${AURA_DB_PASSWORD}"
 
     hikari:
       pool-name: AuraHikariPool
-      maximum-pool-size: 10
-      minimum-idle: 2
+      maximum-pool-size: "${AURA_DB_POOL_MAX_SIZE:10}"
+      minimum-idle: "${AURA_DB_POOL_MIN_IDLE:2}"
       connection-timeout: 30000
 
   thymeleaf:

@@ -206,7 +206,9 @@ Không chấp nhận:
 
 ## Thiết kế database
 
-Schema sử dụng 28 bảng, chia thành các nhóm chính:
+Schema cập nhật sử dụng 29 bảng, 2 view và 13 trigger. Bảng
+`google_oauth_tokens` được tách riêng khỏi `accounts` để lưu thông tin liên kết
+Google OAuth. Các đối tượng database được chia thành các nhóm chính:
 
 - IAM/RBAC: tài khoản, khách hàng, nhân viên, role, permission và audit log.
 - Catalog: thương hiệu, danh mục, sản phẩm, biến thể và hình ảnh.
@@ -276,7 +278,7 @@ Annotation Processing: Enabled
 Đăng nhập MySQL bằng tài khoản quản trị và chạy:
 
 ```sql
-CREATE DATABASE IF NOT EXISTS aura_store_core
+CREATE DATABASE IF NOT EXISTS aura_store
     CHARACTER SET utf8mb4
     COLLATE utf8mb4_vi_0900_ai_ci;
 
@@ -284,13 +286,22 @@ CREATE USER IF NOT EXISTS 'aura_app'@'localhost'
     IDENTIFIED BY 'your_local_password';
 
 GRANT ALL PRIVILEGES
-    ON aura_store_core.*
+    ON aura_store.*
     TO 'aura_app'@'localhost';
 
 FLUSH PRIVILEGES;
 ```
 
+Chỉ tạo **database rỗng**. Không chạy thêm clean-install SQL bằng tay vì Flyway
+sẽ tự tạo 29 bảng, 2 view, 13 trigger và dữ liệu role/permission khi ứng dụng
+khởi động lần đầu.
+
 Không sử dụng tài khoản `root` làm datasource của ứng dụng.
+
+> Nếu `aura_store` đã được tạo đầy đủ bằng clean-install script cũ, Flyway sẽ
+> từ chối schema không rỗng nhưng chưa có `flyway_schema_history`. Hãy sao lưu
+> dữ liệu cần giữ và trao đổi với trưởng nhóm trước khi tạo lại database rỗng.
+> Không tự bật `baseline-on-migrate` để bỏ qua lỗi này.
 
 ### 3. Khai báo biến môi trường
 
@@ -301,11 +312,43 @@ Tạo Run Configuration cho `AuraShoreStoreApplication` trong IntelliJ và khai 
 | `SPRING_PROFILES_ACTIVE` | Không | `dev` |
 | `AURA_DB_USERNAME` | Không | `aura_app` |
 | `AURA_DB_PASSWORD` | Có | Mật khẩu local của thành viên |
-| `AURA_DB_URL` | Không | `jdbc:mysql://localhost:3306/aura_store_core?...` |
+| `AURA_DB_URL` | Không | `jdbc:mysql://localhost:3306/aura_store?...` |
+| `AURA_DB_POOL_MAX_SIZE` | Không | `10` |
+| `AURA_DB_POOL_MIN_IDLE` | Không | `2` |
 
 Không commit mật khẩu, API key, OAuth secret hoặc mail credential lên Git.
 
 Spring Boot không tự động đọc file `.env`. Hãy dùng Environment Variables của IntelliJ hoặc biến môi trường của hệ điều hành.
+
+#### Cấu hình riêng trên máy từng thành viên
+
+Các file cấu hình dùng chung có trách nhiệm như sau:
+
+| File | Có commit? | Mục đích |
+|---|---:|---|
+| `application.yml` | Có | Cấu hình chung: JPA, Flyway, profile mặc định |
+| `application-dev.yml` | Có | Giá trị mặc định cho môi trường phát triển và biến môi trường |
+| `application-local.yml.example` | Có | Mẫu cấu hình riêng cho từng máy |
+| `application-local.yml` | Không | Username, password, host hoặc port riêng của thành viên |
+
+Cách khuyến nghị là giữ `SPRING_PROFILES_ACTIVE=dev` và khai báo ba biến trong
+IntelliJ Run Configuration:
+
+```text
+AURA_DB_URL=jdbc:mysql://localhost:3306/aura_store?useUnicode=true&characterEncoding=UTF-8&connectionTimeZone=UTC&sslMode=DISABLED&allowPublicKeyRetrieval=true
+AURA_DB_USERNAME=aura_app
+AURA_DB_PASSWORD=<mật khẩu MySQL trên máy của bạn>
+```
+
+Nếu muốn dùng file local:
+
+1. Sao chép `application-local.yml.example` thành `application-local.yml`.
+2. Sửa `url`, `username` và `password` trong bản sao.
+3. Đặt `SPRING_PROFILES_ACTIVE=dev,local` để profile `local` ghi đè `dev`.
+4. Không dùng `git add -f` với `application-local.yml`; file này đã được `.gitignore` bảo vệ.
+
+Không sửa `application-dev.yml` chỉ để phù hợp máy cá nhân. Chỉ sửa file dùng
+chung khi cả nhóm thống nhất đổi tên database, timezone hoặc chính sách kết nối.
 
 ### 4. Build
 
@@ -328,6 +371,32 @@ Chạy trực tiếp trong IntelliJ hoặc dùng:
 ```powershell
 .\mvnw.cmd spring-boot:run
 ```
+
+Khi chạy lần đầu, log thành công cần có các dấu hiệu tương tự:
+
+```text
+AuraHikariPool - Start completed
+Successfully applied 1 migration
+Tomcat started on port 8080
+```
+
+Kiểm tra từ MySQL:
+
+```sql
+USE aura_store;
+
+SELECT version, description, success
+FROM flyway_schema_history
+ORDER BY installed_rank;
+
+SELECT COUNT(*) AS base_table_count
+FROM information_schema.tables
+WHERE table_schema = 'aura_store'
+  AND table_type = 'BASE TABLE';
+```
+
+Kết quả migration ban đầu phải thành công. Schema nghiệp vụ có 29 bảng; MySQL
+còn hiển thị thêm `flyway_schema_history` do Flyway quản lý.
 
 Ứng dụng mặc định chạy tại:
 
@@ -367,14 +436,21 @@ Migration đặt tại:
 src/main/resources/db/migration
 ```
 
-Quy ước tên:
+Migration khởi tạo hiện tại:
 
 ```text
-V1__create_core_tables.sql
-V2__create_inventory_views.sql
-V3__create_integrity_triggers.sql
-V4__insert_reference_data.sql
-V5__short_description.sql
+V1__initialize_aura_schema.sql
+```
+
+Migration này được tạo từ bản SQL cập nhật, bao gồm 29 bảng, 2 view, 13 trigger
+và dữ liệu nền cho role, permission, role-permission. Nó không chứa
+`DROP DATABASE`, `CREATE DATABASE`, `USE` hoặc các câu lệnh kiểm tra cài đặt.
+
+Migration tiếp theo đặt tên tăng dần:
+
+```text
+V2__short_description.sql
+V3__short_description.sql
 ```
 
 Quy tắc:
@@ -385,6 +461,20 @@ Quy tắc:
 4. Không bật `baseline-on-migrate` để che giấu database sai trạng thái.
 5. Không dùng cả Flyway và `schema.sql`/`data.sql` cho cùng một schema.
 6. Kiểm tra lịch sử bằng bảng `flyway_schema_history`.
+
+Flyway hỗ trợ cú pháp `DELIMITER` của MySQL, vì vậy các trigger trong migration
+khởi tạo được giữ nguyên.
+
+### Xử lý lỗi kết nối thường gặp
+
+| Lỗi | Nguyên nhân thường gặp | Cách xử lý |
+|---|---|---|
+| `Unknown database 'aura_store'` | Chưa tạo database hoặc vẫn dùng tên cũ | Tạo database rỗng `aura_store`; kiểm tra `AURA_DB_URL` |
+| `Access denied for user` | Sai username/password hoặc chưa `GRANT` | Kiểm tra biến môi trường và quyền của `aura_app` |
+| `Communications link failure` | MySQL chưa chạy hoặc sai host/port | Khởi động MySQL; kiểm tra port trong JDBC URL |
+| `Found non-empty schema but no schema history table` | Đã chạy clean-install SQL bằng tay | Sao lưu và tạo lại database rỗng; không bật baseline tùy tiện |
+| `Validate failed: Migration checksum mismatch` | Đã sửa migration từng được chạy | Khôi phục migration gốc và tạo migration version mới |
+| `Unable to resolve AURA_DB_PASSWORD` | Chưa khai báo mật khẩu | Thêm biến trong IntelliJ hoặc dùng `application-local.yml` |
 
 ## Quy ước phát triển
 
@@ -536,7 +626,7 @@ Chạy kiểm tra đầy đủ trước Pull Request:
 | Cấu hình datasource local | Đã khởi tạo |
 | Service interfaces | Đã tạo |
 | Package còn lại | Chưa hoàn thiện |
-| Flyway migrations | Chưa đưa vào project |
+| Flyway migration khởi tạo | Đã tạo từ SQL cập nhật |
 | Entity và enum | Chưa triển khai |
 | Repository và mapper | Chưa triển khai |
 | Service implementations | Chưa triển khai |

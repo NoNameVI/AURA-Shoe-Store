@@ -1,0 +1,19 @@
+# Copy this file to application-local.yml for local-only overrides.
+# Never commit application-local.yml because it may contain a real password.
+# Activate it after dev: SPRING_PROFILES_ACTIVE=dev,local
+spring:
+  config:
+    activate:
+      on-profile: local
+
+  datasource:
+    # Adjust host/port only when your MySQL installation differs.
+    # Keep the database name "aura_store" to match the shared Flyway migration.
+    url: "jdbc:mysql://localhost:3306/aura_store?useUnicode=true&characterEncoding=UTF-8&connectionTimeZone=UTC&sslMode=DISABLED&allowPublicKeyRetrieval=true"
+    username: "aura_app"
+    password: "replace_with_your_local_password"
+
+    # A developer laptop normally does not need a large connection pool.
+    hikari:
+      maximum-pool-size: 10
+      minimum-idle: 2

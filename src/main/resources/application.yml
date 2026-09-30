@@ -1,3 +1,5 @@
+# Shared configuration committed to Git.
+# Do not place developer-specific credentials in this file.
 spring:
   application:
     name: aura-store
@@ -16,6 +18,7 @@ spring:
           time_zone: UTC
 
   flyway:
+    # Flyway owns every object inside the selected database schema.
     enabled: true
     locations: classpath:db/migration
     validate-migration-naming: true
