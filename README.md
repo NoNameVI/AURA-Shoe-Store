@@ -278,9 +278,9 @@ Trên macOS/Linux:
 ## Cài đặt và chạy dự án
 
 Quy trình dưới đây dành cho **MySQL 8.x**, **JDK 25** và IntelliJ IDEA
-trên Windows. Thực hiện lần lượt từ bước 1 đến bước 6. Trong các khối
-lệnh, chỉ cần thay `CHANGE_ME_STRONG_PASSWORD` bằng mật khẩu MySQL riêng
-trên máy của bạn.
+trên Windows. Thực hiện lần lượt từ bước 1 đến bước 6. Toàn nhóm
+thống nhất dùng mật khẩu `your_local_password` cho tài khoản MySQL local
+`aura_app`, vì vậy các khối lệnh có thể được sao chép và chạy trực tiếp.
 
 ### 1. Clone và mở project
 
@@ -303,7 +303,6 @@ Annotation Processing: Enabled
 ### 2. Tạo database và tài khoản MySQL
 
 Mở MySQL Workbench, kết nối bằng tài khoản `root`, mở SQL tab mới,
-thay hai vị trí `CHANGE_ME_STRONG_PASSWORD` bằng cùng một mật khẩu,
 rồi sao chép và chạy toàn bộ khối sau:
 
 ```sql
@@ -318,11 +317,11 @@ CREATE DATABASE IF NOT EXISTS aura_store
 
 -- Tài khoản riêng cho ứng dụng, không dùng root làm datasource.
 CREATE USER IF NOT EXISTS 'aura_app'@'localhost'
-    IDENTIFIED BY 'CHANGE_ME_STRONG_PASSWORD';
+    IDENTIFIED BY 'your_local_password';
 
 -- Giúp script có thể chạy lại khi aura_app đã tồn tại.
 ALTER USER 'aura_app'@'localhost'
-    IDENTIFIED BY 'CHANGE_ME_STRONG_PASSWORD';
+    IDENTIFIED BY 'your_local_password';
 
 -- ALL chỉ áp dụng trong aura_store.*, không phải toàn MySQL server.
 GRANT ALL PRIVILEGES
@@ -381,11 +380,10 @@ Use classpath of module: aura-store
 JRE: Project SDK 25
 ```
 
-Tại **Environment variables**, xóa cấu hình thử nghiệm cũ, thay
-`CHANGE_ME_STRONG_PASSWORD` bằng mật khẩu đã dùng ở bước 2, rồi dán:
+Tại **Environment variables**, xóa cấu hình thử nghiệm cũ và dán:
 
 ```text
-AURA_DB_PASSWORD=CHANGE_ME_STRONG_PASSWORD
+AURA_DB_PASSWORD=your_local_password
 ```
 
 Chỉ biến trên là bắt buộc khi MySQL chạy tại `localhost:3306` và đã
@@ -404,18 +402,21 @@ variables của IntelliJ trên Windows, các biến phải ngăn cách bằng d�
 chấm phẩy, không phải dấu cách:
 
 ```text
-SPRING_PROFILES_ACTIVE=dev;AURA_DB_USERNAME=aura_app;AURA_DB_PASSWORD=CHANGE_ME_STRONG_PASSWORD;AURA_DB_URL=jdbc:mysql://localhost:3306/aura_store?useUnicode=true&characterEncoding=UTF-8&connectionTimeZone=UTC&sslMode=DISABLED&allowPublicKeyRetrieval=true
+SPRING_PROFILES_ACTIVE=dev;AURA_DB_USERNAME=aura_app;AURA_DB_PASSWORD=your_local_password;AURA_DB_URL=jdbc:mysql://localhost:3306/aura_store?useUnicode=true&characterEncoding=UTF-8&connectionTimeZone=UTC&sslMode=DISABLED&allowPublicKeyRetrieval=true
 ```
 
-Không commit mật khẩu, API key, OAuth secret hoặc mail credential lên Git.
-Spring Boot không tự động đọc file `.env`.
+`your_local_password` chỉ là quy ước cho database local phục vụ phát triển.
+Không tái sử dụng mật khẩu này cho production, staging, hosting, email,
+OAuth hoặc bất kỳ dịch vụ công khai nào. Không commit mật khẩu thật, API
+key, OAuth secret hoặc mail credential lên Git. Spring Boot không tự động đọc
+file `.env`.
 
 #### Tùy chọn: dùng file cấu hình local
 
 Nếu không muốn dùng Environment variables của IntelliJ:
 
 1. Sao chép `application-local.yml.example` thành `application-local.yml`.
-2. Thay `replace_with_your_local_password` bằng mật khẩu local.
+2. Đặt `password: "your_local_password"` trong file local.
 3. Đặt `SPRING_PROFILES_ACTIVE=dev,local`.
 4. Không commit `application-local.yml`; file này đã được `.gitignore` bảo vệ.
 
@@ -445,10 +446,10 @@ Trên macOS/Linux, lệnh tương ứng là `./mvnw clean verify`.
 ### 5. Chạy và kiểm tra ứng dụng
 
 Chạy Run Configuration `AURA Store` trong IntelliJ. Hoặc, trong PowerShell
-đang mở tại thư mục project, thay password và sao chép hai dòng sau:
+đang mở tại thư mục project, sao chép hai dòng sau:
 
 ```powershell
-$env:AURA_DB_PASSWORD = "CHANGE_ME_STRONG_PASSWORD"
+$env:AURA_DB_PASSWORD = "your_local_password"
 .\mvnw.cmd spring-boot:run
 ```
 
@@ -498,7 +499,7 @@ Trong PowerShell:
 
 ```powershell
 .\mvnw.cmd clean package
-$env:AURA_DB_PASSWORD = "CHANGE_ME_STRONG_PASSWORD"
+$env:AURA_DB_PASSWORD = "your_local_password"
 java -jar target/aura-store-0.0.1-SNAPSHOT.jar
 ```
 
