@@ -1,0 +1,26 @@
+spring:
+  config:
+    activate:
+      on-profile: dev
+
+  datasource:
+    url: "${AURA_DB_URL:jdbc:mysql://localhost:3306/aura_store_core?useUnicode=true&characterEncoding=UTF-8&connectionTimeZone=UTC&sslMode=DISABLED&allowPublicKeyRetrieval=true}"
+    username: "${AURA_DB_USERNAME:aura_app}"
+    password: "${AURA_DB_PASSWORD}"
+
+    hikari:
+      pool-name: AuraHikariPool
+      maximum-pool-size: 10
+      minimum-idle: 2
+      connection-timeout: 30000
+
+  thymeleaf:
+    cache: false
+
+  jpa:
+    show-sql: true
+
+logging:
+  level:
+    org.hibernate.SQL: DEBUG
+    org.flywaydb: INFO
