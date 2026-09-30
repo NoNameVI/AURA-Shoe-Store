@@ -280,7 +280,7 @@ Trên macOS/Linux:
 ### 1. Clone repository
 
 ```bash
-git clone <[repository-url](https://github.com/NoNameVI/AURA-Shore-Store.git)>
+git clone https://github.com/NoNameVI/AURA-Shore-Store.git
 cd <repository-directory>
 ```
 
