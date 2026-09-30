@@ -277,16 +277,22 @@ Trên macOS/Linux:
 
 ## Cài đặt và chạy dự án
 
-### 1. Clone repository
+Quy trình dưới đây dành cho **MySQL 8.x**, **JDK 25** và IntelliJ IDEA
+trên Windows. Thực hiện lần lượt từ bước 1 đến bước 6. Trong các khối
+lệnh, chỉ cần thay `CHANGE_ME_STRONG_PASSWORD` bằng mật khẩu MySQL riêng
+trên máy của bạn.
 
-```bash
-git clone <repository-url>
-cd <repository-directory>
+### 1. Clone và mở project
+
+Mở PowerShell, sao chép và chạy:
+
+```powershell
+git clone https://github.com/NoNameVI/AURA-Shore-Store.git
+cd AURA-Shore-Store
 ```
 
-Mở `pom.xml` bằng IntelliJ và chọn **Load Maven Project**.
-
-Thiết lập:
+Mở `pom.xml` bằng IntelliJ IDEA, chọn **Load Maven Project**, sau đó
+kiểm tra:
 
 ```text
 Project SDK: JDK 25
@@ -294,114 +300,181 @@ Maven Runner JRE: Project SDK 25
 Annotation Processing: Enabled
 ```
 
-### 2. Tạo database local
+### 2. Tạo database và tài khoản MySQL
 
-Đăng nhập MySQL bằng tài khoản quản trị và chạy:
+Mở MySQL Workbench, kết nối bằng tài khoản `root`, mở SQL tab mới,
+thay hai vị trí `CHANGE_ME_STRONG_PASSWORD` bằng cùng một mật khẩu,
+rồi sao chép và chạy toàn bộ khối sau:
 
 ```sql
+-- Cho phép tài khoản migration tạo trigger khi MySQL bật binary logging.
+-- Thiết lập này được lưu lại sau khi MySQL khởi động lại.
+SET PERSIST log_bin_trust_function_creators = ON;
+
+-- Project chỉ cần database rỗng; Flyway sẽ tự tạo schema.
 CREATE DATABASE IF NOT EXISTS aura_store
     CHARACTER SET utf8mb4
     COLLATE utf8mb4_vi_0900_ai_ci;
 
+-- Tài khoản riêng cho ứng dụng, không dùng root làm datasource.
 CREATE USER IF NOT EXISTS 'aura_app'@'localhost'
-    IDENTIFIED BY 'your_local_password';
+    IDENTIFIED BY 'CHANGE_ME_STRONG_PASSWORD';
 
+-- Giúp script có thể chạy lại khi aura_app đã tồn tại.
+ALTER USER 'aura_app'@'localhost'
+    IDENTIFIED BY 'CHANGE_ME_STRONG_PASSWORD';
+
+-- ALL chỉ áp dụng trong aura_store.*, không phải toàn MySQL server.
 GRANT ALL PRIVILEGES
     ON aura_store.*
     TO 'aura_app'@'localhost';
 
-FLUSH PRIVILEGES;
+SHOW GLOBAL VARIABLES LIKE 'log_bin_trust_function_creators';
+SHOW GRANTS FOR 'aura_app'@'localhost';
 ```
 
-Chỉ tạo **database rỗng**. Không chạy thêm clean-install SQL bằng tay vì Flyway
-sẽ tự tạo 29 bảng, 2 view, 13 trigger và dữ liệu role/permission khi ứng dụng
-khởi động lần đầu.
+Kết quả đúng cần có:
 
-Không sử dụng tài khoản `root` làm datasource của ứng dụng.
+```text
+log_bin_trust_function_creators = ON
+GRANT ALL PRIVILEGES ON `aura_store`.* TO `aura_app`@`localhost`
+```
 
-> Nếu `aura_store` đã được tạo đầy đủ bằng clean-install script cũ, Flyway sẽ
-> từ chối schema không rỗng nhưng chưa có `flyway_schema_history`. Hãy sao lưu
-> dữ liệu cần giữ và trao đổi với trưởng nhóm trước khi tạo lại database rỗng.
-> Không tự bật `baseline-on-migrate` để bỏ qua lỗi này.
+Không chạy file clean-install SQL bằng tay. Khi ứng dụng khởi động lần
+đầu, Flyway sẽ tự tạo 29 bảng nghiệp vụ, 2 view, 13 trigger và dữ
+liệu role/permission.
 
-### 3. Khai báo biến môi trường
+> Nếu `SET PERSIST` bị từ chối, chạy
+> `SET GLOBAL log_bin_trust_function_creators = ON;`. Cách này có hiệu lực
+> ngay nhưng có thể phải chạy lại sau khi khởi động MySQL.
 
-Tạo Run Configuration cho `AuraShoreStoreApplication` trong IntelliJ và khai báo:
+#### Chỉ khi cài đặt local trước đó bị lỗi
 
-| Biến | Bắt buộc | Ví dụ |
-|---|---:|---|
-| `SPRING_PROFILES_ACTIVE` | Không | `dev` |
-| `AURA_DB_USERNAME` | Không | `aura_app` |
-| `AURA_DB_PASSWORD` | Có | Mật khẩu local của thành viên |
-| `AURA_DB_URL` | Không | `jdbc:mysql://localhost:3306/aura_store?...` |
-| `AURA_DB_POOL_MAX_SIZE` | Không | `10` |
-| `AURA_DB_POOL_MIN_IDLE` | Không | `2` |
+Nếu Flyway đã chạy dở và `aura_store` chưa có dữ liệu cần giữ, đăng
+nhập bằng `root` và tạo lại database sạch:
+
+```sql
+DROP DATABASE IF EXISTS aura_store;
+
+CREATE DATABASE aura_store
+    CHARACTER SET utf8mb4
+    COLLATE utf8mb4_vi_0900_ai_ci;
+
+GRANT ALL PRIVILEGES
+    ON aura_store.*
+    TO 'aura_app'@'localhost';
+```
+
+Không chạy khối reset trên nếu database có dữ liệu cần giữ. Không tự
+bật `baseline-on-migrate` để che giấu database sai trạng thái.
+
+### 3. Tạo Run Configuration và biến môi trường
+
+Mở `AuraShoreStoreApplication.java`, bấm tam giác xanh cạnh hàm `main()` và
+chọn **Run 'AuraShoreStoreApplication'**. IntelliJ sẽ tự tạo Run
+Configuration. Sau đó vào **Run → Edit Configurations** và kiểm tra:
+
+```text
+Name: AURA Store
+Main class: com.aura.store.AuraShoreStoreApplication
+Use classpath of module: aura-store
+JRE: Project SDK 25
+```
+
+Tại **Environment variables**, xóa cấu hình thử nghiệm cũ, thay
+`CHANGE_ME_STRONG_PASSWORD` bằng mật khẩu đã dùng ở bước 2, rồi dán:
+
+```text
+AURA_DB_PASSWORD=CHANGE_ME_STRONG_PASSWORD
+```
+
+Chỉ biến trên là bắt buộc khi MySQL chạy tại `localhost:3306` và đã
+dùng đúng tên `aura_store`/`aura_app`. Project đã có các giá trị mặc định:
+
+```text
+SPRING_PROFILES_ACTIVE=dev
+AURA_DB_USERNAME=aura_app
+AURA_DB_URL=jdbc:mysql://localhost:3306/aura_store?useUnicode=true&characterEncoding=UTF-8&connectionTimeZone=UTC&sslMode=DISABLED&allowPublicKeyRetrieval=true
+AURA_DB_POOL_MAX_SIZE=10
+AURA_DB_POOL_MIN_IDLE=2
+```
+
+Nếu muốn khai báo tường minh toàn bộ trong **một ô** Environment
+variables của IntelliJ trên Windows, các biến phải ngăn cách bằng dấu
+chấm phẩy, không phải dấu cách:
+
+```text
+SPRING_PROFILES_ACTIVE=dev;AURA_DB_USERNAME=aura_app;AURA_DB_PASSWORD=CHANGE_ME_STRONG_PASSWORD;AURA_DB_URL=jdbc:mysql://localhost:3306/aura_store?useUnicode=true&characterEncoding=UTF-8&connectionTimeZone=UTC&sslMode=DISABLED&allowPublicKeyRetrieval=true
+```
 
 Không commit mật khẩu, API key, OAuth secret hoặc mail credential lên Git.
+Spring Boot không tự động đọc file `.env`.
 
-Spring Boot không tự động đọc file `.env`. Hãy dùng Environment Variables của IntelliJ hoặc biến môi trường của hệ điều hành.
+#### Tùy chọn: dùng file cấu hình local
 
-#### Cấu hình riêng trên máy từng thành viên
+Nếu không muốn dùng Environment variables của IntelliJ:
 
-Các file cấu hình dùng chung có trách nhiệm như sau:
+1. Sao chép `application-local.yml.example` thành `application-local.yml`.
+2. Thay `replace_with_your_local_password` bằng mật khẩu local.
+3. Đặt `SPRING_PROFILES_ACTIVE=dev,local`.
+4. Không commit `application-local.yml`; file này đã được `.gitignore` bảo vệ.
 
 | File | Có commit? | Mục đích |
 |---|---:|---|
 | `application.yml` | Có | Cấu hình chung: JPA, Flyway, profile mặc định |
-| `application-dev.yml` | Có | Giá trị mặc định cho môi trường phát triển và biến môi trường |
+| `application-dev.yml` | Có | Cấu hình phát triển và giá trị mặc định |
 | `application-local.yml.example` | Có | Mẫu cấu hình riêng cho từng máy |
-| `application-local.yml` | Không | Username, password, host hoặc port riêng của thành viên |
+| `application-local.yml` | Không | Chứa username/password/host/port riêng của thành viên |
 
-Cách khuyến nghị là giữ `SPRING_PROFILES_ACTIVE=dev` và khai báo ba biến trong
-IntelliJ Run Configuration:
+### 4. Build project
 
-```text
-AURA_DB_URL=jdbc:mysql://localhost:3306/aura_store?useUnicode=true&characterEncoding=UTF-8&connectionTimeZone=UTC&sslMode=DISABLED&allowPublicKeyRetrieval=true
-AURA_DB_USERNAME=aura_app
-AURA_DB_PASSWORD=<mật khẩu MySQL trên máy của bạn>
-```
-
-Nếu muốn dùng file local:
-
-1. Sao chép `application-local.yml.example` thành `application-local.yml`.
-2. Sửa `url`, `username` và `password` trong bản sao.
-3. Đặt `SPRING_PROFILES_ACTIVE=dev,local` để profile `local` ghi đè `dev`.
-4. Không dùng `git add -f` với `application-local.yml`; file này đã được `.gitignore` bảo vệ.
-
-Không sửa `application-dev.yml` chỉ để phù hợp máy cá nhân. Chỉ sửa file dùng
-chung khi cả nhóm thống nhất đổi tên database, timezone hoặc chính sách kết nối.
-
-### 4. Build
-
-Windows PowerShell:
+Mở Terminal trong IntelliJ và chạy:
 
 ```powershell
 .\mvnw.cmd clean verify
 ```
 
-macOS/Linux:
+Kết quả cần có:
 
-```bash
-./mvnw clean verify
+```text
+BUILD SUCCESS
 ```
 
-### 5. Chạy ứng dụng
+Trên macOS/Linux, lệnh tương ứng là `./mvnw clean verify`.
 
-Chạy trực tiếp trong IntelliJ hoặc dùng:
+### 5. Chạy và kiểm tra ứng dụng
+
+Chạy Run Configuration `AURA Store` trong IntelliJ. Hoặc, trong PowerShell
+đang mở tại thư mục project, thay password và sao chép hai dòng sau:
 
 ```powershell
+$env:AURA_DB_PASSWORD = "CHANGE_ME_STRONG_PASSWORD"
 .\mvnw.cmd spring-boot:run
 ```
 
-Khi chạy lần đầu, log thành công cần có các dấu hiệu tương tự:
+Lần chạy đầu thành công sẽ có các log tương tự:
 
 ```text
 AuraHikariPool - Start completed
 Successfully applied 1 migration
 Tomcat started on port 8080
+Started AuraShoreStoreApplication
 ```
 
-Kiểm tra từ MySQL:
+Mở trình duyệt:
+
+```text
+Trang chủ:  http://localhost:8080/
+Health:     http://localhost:8080/actuator/health
+```
+
+Health endpoint phải trả về:
+
+```json
+{"status":"UP"}
+```
+
+Kiểm tra migration trong MySQL Workbench:
 
 ```sql
 USE aura_store;
@@ -416,36 +489,21 @@ WHERE table_schema = 'aura_store'
   AND table_type = 'BASE TABLE';
 ```
 
-Kết quả migration ban đầu phải thành công. Schema nghiệp vụ có 29 bảng; MySQL
+Migration V1 phải có `success = 1`. Schema nghiệp vụ có 29 bảng; MySQL
 còn hiển thị thêm `flyway_schema_history` do Flyway quản lý.
 
-Ứng dụng mặc định chạy tại:
+### 6. Đóng gói và chạy JAR
 
-```text
-http://localhost:8080
-```
-
-### 6. Đóng gói JAR
+Trong PowerShell:
 
 ```powershell
 .\mvnw.cmd clean package
+$env:AURA_DB_PASSWORD = "CHANGE_ME_STRONG_PASSWORD"
 java -jar target/aura-store-0.0.1-SNAPSHOT.jar
 ```
 
-HTML/Thymeleaf, CSS, JavaScript và hình ảnh được đóng gói bên trong executable JAR.
-
-```text
-src/main/resources
-├── templates
-│   ├── auth
-│   ├── storefront
-│   ├── management
-│   └── fragments
-└── static
-    ├── css
-    ├── js
-    └── images
-```
+HTML/Thymeleaf, CSS, JavaScript, migration, dependency runtime và embedded Tomcat
+được đóng gói trong executable JAR; máy chạy không cần cài Tomcat riêng.
 
 ## Quản lý database bằng Flyway
 

@@ -762,8 +762,10 @@ CREATE TABLE after_sales_requests (
         REFERENCES orders (order_id, customer_id) ON DELETE RESTRICT,
     CONSTRAINT fk_after_sales_item_order FOREIGN KEY (order_item_id, order_id)
         REFERENCES order_items (order_item_id, order_id) ON DELETE RESTRICT,
-    CONSTRAINT fk_after_sales_exchange_variant FOREIGN KEY (exchange_variant_id)
-        REFERENCES product_variants (variant_id) ON DELETE SET NULL,
+CONSTRAINT fk_after_sales_exchange_variant
+    FOREIGN KEY (exchange_variant_id)
+    REFERENCES product_variants (variant_id)
+    ON DELETE RESTRICT,
     CONSTRAINT fk_after_sales_handler FOREIGN KEY (handled_by_staff_id)
         REFERENCES staffs (staff_id) ON DELETE RESTRICT,
     CONSTRAINT ck_after_sales_type

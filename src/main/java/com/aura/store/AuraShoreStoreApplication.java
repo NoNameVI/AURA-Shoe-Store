@@ -7,6 +7,7 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
 public class AuraShoreStoreApplication {
 
     public static void main(String[] args) {
+
         SpringApplication.run(AuraShoreStoreApplication.class, args);
     }
 
