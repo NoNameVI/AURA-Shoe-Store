@@ -383,25 +383,6 @@ JRE: Project SDK 25
 Tại **Environment variables**, xóa cấu hình thử nghiệm cũ và dán:
 
 ```text
-AURA_DB_PASSWORD=your_local_password
-```
-
-Chỉ biến trên là bắt buộc khi MySQL chạy tại `localhost:3306` và đã
-dùng đúng tên `aura_store`/`aura_app`. Project đã có các giá trị mặc định:
-
-```text
-SPRING_PROFILES_ACTIVE=dev
-AURA_DB_USERNAME=aura_app
-AURA_DB_URL=jdbc:mysql://localhost:3306/aura_store?useUnicode=true&characterEncoding=UTF-8&connectionTimeZone=UTC&sslMode=DISABLED&allowPublicKeyRetrieval=true
-AURA_DB_POOL_MAX_SIZE=10
-AURA_DB_POOL_MIN_IDLE=2
-```
-
-Nếu muốn khai báo tường minh toàn bộ trong **một ô** Environment
-variables của IntelliJ trên Windows, các biến phải ngăn cách bằng dấu
-chấm phẩy, không phải dấu cách:
-
-```text
 SPRING_PROFILES_ACTIVE=dev;AURA_DB_USERNAME=aura_app;AURA_DB_PASSWORD=your_local_password;AURA_DB_URL=jdbc:mysql://localhost:3306/aura_store?useUnicode=true&characterEncoding=UTF-8&connectionTimeZone=UTC&sslMode=DISABLED&allowPublicKeyRetrieval=true
 ```
 
