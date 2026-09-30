@@ -1,0 +1,17 @@
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+<body>
+<header class="site-header" th:fragment="siteHeader">
+    <a class="brand" th:href="@{/}">AURA Store</a>
+    <nav aria-label="Điều hướng chính">
+        <a th:href="@{/products}">Sản phẩm</a>
+        <a th:href="@{/wishlist}">Yêu thích</a>
+        <a th:href="@{/cart}">Giỏ hàng</a>
+        <a th:href="@{/account/orders}">Đơn hàng</a>
+        <a th:href="@{/management}">Quản lý</a>
+    </nav>
+    <a class="button-link" th:href="@{/login}">Đăng nhập</a>
+</header>
+</body>
+</html>
+

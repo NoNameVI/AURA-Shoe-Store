@@ -1,0 +1,20 @@
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Lỗi | AURA Store</title>
+    <link rel="stylesheet" th:href="@{/css/app.css}">
+</head>
+<body>
+<main class="auth-shell">
+    <section class="form-card">
+        <p class="eyebrow">AURA Store</p>
+        <h1><span th:text="${status}">500</span> — <span th:text="${error}">Error</span></h1>
+        <p th:text="${message}">Đã xảy ra lỗi.</p>
+        <a class="primary-button" th:href="@{/}">Về trang chủ</a>
+    </section>
+</main>
+</body>
+</html>
+

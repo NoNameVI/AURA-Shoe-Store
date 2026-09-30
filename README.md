@@ -2,7 +2,10 @@
 
 AURA Store là hệ thống quản lý và bán giày trực tuyến được xây dựng bằng Spring Boot, Spring MVC và Thymeleaf. Dự án phục vụ đồ án môn học, đồng thời được tổ chức theo các quy ước gần với một dự án thực tế để nhiều thành viên có thể phát triển song song.
 
-> Trạng thái hiện tại: dự án đang ở giai đoạn khởi tạo kiến trúc. Các service interface đã được khai báo; entity, DTO, repository, mapper, controller và giao diện sẽ được bổ sung theo từng Pull Request.
+> Trạng thái hiện tại: bộ khung kiến trúc đã được tạo đầy đủ. Entity, DTO,
+> repository, mapper, service implementation, controller và giao diện hiện là
+> skeleton có thể biên dịch; trường dữ liệu, chữ ký use case và nghiệp vụ sẽ
+> được hoàn thiện theo từng Pull Request.
 
 ## Mục lục
 
@@ -42,7 +45,7 @@ Hệ thống dự kiến hỗ trợ các nhóm chức năng sau:
 | Thành phần | Công nghệ |
 |---|---|
 | Ngôn ngữ | Java 25 |
-| Backend | Spring Boot, Spring MVC |
+| Backend | Spring Boot 3.5.16, Spring MVC |
 | View engine | Thymeleaf |
 | Bảo mật | Spring Security, OAuth2 Client |
 | Persistence | Spring Data JPA, Hibernate |
@@ -177,6 +180,24 @@ Các interface được nhóm theo aggregate/use case, không tạo máy móc m�
 - Hỗ trợ: `ReportingService`, `AuditLogService`, `EmailService`.
 
 Interface chỉ nên chứa chữ ký thể hiện use case. Không đưa JPA query, HTTP object hoặc chi tiết framework vào service interface.
+
+### Phạm vi của architecture skeleton
+
+Các file đã tồn tại để thành viên không phải tự quyết định lại cấu trúc dự án:
+
+- 29 entity tương ứng 29 bảng, hai base entity và khóa ghép `RolePermissionId`.
+- 29 Spring Data repository.
+- Request/response DTO cho các use case chắc chắn có.
+- 24 service interface và implementation shell tương ứng.
+- Mapper contract theo aggregate chính.
+- Controller cho authentication, storefront và management.
+- Security, JPA auditing, scheduling, exception handling và phone validation.
+- Template Thymeleaf, fragment dùng chung, CSS và JavaScript nền.
+
+Skeleton **không được xem là feature đã hoàn thành**. Entity hiện chỉ ánh xạ
+table, ID và timestamp chắc chắn; association và business field được bổ sung khi
+thành viên triển khai feature. DTO/mapper/service implementation cũng chỉ là
+điểm mở rộng, không chứa dữ liệu hoặc nghiệp vụ giả.
 
 ## Nguyên tắc phụ thuộc
 
@@ -625,14 +646,14 @@ Chạy kiểm tra đầy đủ trước Pull Request:
 | Cấu hình Spring Boot cơ bản | Đã khởi tạo |
 | Cấu hình datasource local | Đã khởi tạo |
 | Service interfaces | Đã tạo |
-| Package còn lại | Chưa hoàn thiện |
+| Package architecture | Đã tạo đầy đủ skeleton |
 | Flyway migration khởi tạo | Đã tạo từ SQL cập nhật |
-| Entity và enum | Chưa triển khai |
-| Repository và mapper | Chưa triển khai |
-| Service implementations | Chưa triển khai |
-| Security configuration | Chưa triển khai |
-| Controllers và Thymeleaf UI | Chưa triển khai |
-| Automated tests | Chưa triển khai |
+| Entity và enum | Đã có skeleton; business fields đang chờ triển khai |
+| Repository và mapper | Đã có skeleton; query/mapping đang chờ triển khai |
+| Service implementations | Đã có implementation shell |
+| Security configuration | Đã có cấu hình nền; authorization chi tiết đang chờ triển khai |
+| Controllers và Thymeleaf UI | Đã có route và trang skeleton |
+| Automated tests | Có smoke test; feature test đang chờ triển khai |
 | Docker | Chưa sử dụng ở giai đoạn hiện tại |
 
 Khi hoàn thành một hạng mục, Pull Request triển khai hạng mục đó phải cập nhật lại bảng trạng thái nếu cần.

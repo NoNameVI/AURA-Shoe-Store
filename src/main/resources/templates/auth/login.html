@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Đăng nhập | AURA Store</title>
+    <link rel="stylesheet" th:href="@{/css/app.css}">
+</head>
+<body>
+<main class="auth-shell">
+    <form class="form-card" th:action="@{/login}" method="post">
+        <a class="brand" th:href="@{/}">AURA Store</a>
+        <h1>Đăng nhập</h1>
+        <p class="form-message error" th:if="${param.error}">Thông tin đăng nhập không hợp lệ.</p>
+        <p class="form-message" th:if="${param.logout}">Bạn đã đăng xuất.</p>
+        <label>Tên đăng nhập hoặc email
+            <input name="username" autocomplete="username" required>
+        </label>
+        <label>Mật khẩu
+            <input type="password" name="password" autocomplete="current-password" required>
+        </label>
+        <button class="primary-button" type="submit">Đăng nhập</button>
+        <div class="form-links">
+            <a th:href="@{/forgot-password}">Quên mật khẩu?</a>
+            <a th:href="@{/register}">Tạo tài khoản</a>
+        </div>
+    </form>
+</main>
+</body>
+</html>
+

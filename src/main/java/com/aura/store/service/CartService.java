@@ -5,4 +5,9 @@ package com.aura.store.service;
  * reservations.
  */
 public interface CartService {
+
+    /**
+     * Releases inventory reservations whose expiration time has passed.
+     */
+    void releaseExpiredReservations();
 }
