@@ -358,7 +358,7 @@ IntelliJ Run Configuration:
 ```text
 AURA_DB_URL=jdbc:mysql://localhost:3306/aura_store?useUnicode=true&characterEncoding=UTF-8&connectionTimeZone=UTC&sslMode=DISABLED&allowPublicKeyRetrieval=true
 AURA_DB_USERNAME=aura_app
-AURA_DB_PASSWORD=<mật khẩu MySQL trên máy của bạn>
+AURA_DB_PASSWORD=<your_local_password>
 ```
 
 Nếu muốn dùng file local:
