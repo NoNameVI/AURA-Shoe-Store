@@ -1,8 +1,23 @@
 <!DOCTYPE html>
-<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+<html lang="vi" xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
 <body>
 <footer class="site-footer" th:fragment="siteFooter">
-    <p>&copy; <span th:text="${#temporals.year(#temporals.createNow())}">2026</span> AURA Store</p>
+    <div class="shop-container footer-top">
+        <div>
+            <a class="footer-brand" th:href="@{/}">AURA<span>FOOTWEAR</span></a>
+            <p>Chọn điều giản dị. Bước đi khác biệt.</p>
+        </div>
+        <nav aria-label="Điều hướng cuối trang">
+            <a th:href="@{/products}">Bộ sưu tập</a>
+            <a th:href="@{/#story}">Về AURA</a>
+            <a sec:authorize="isAnonymous()" th:href="@{/login}">Đăng nhập</a>
+            <a sec:authorize="isAuthenticated()" th:href="@{/account/profile}">Tài khoản</a>
+        </nav>
+    </div>
+    <div class="shop-container footer-bottom">
+        <span>&copy; <span th:text="${#temporals.year(#temporals.createNow())}">2026</span> AURA Footwear</span>
+        <span>Được tạo cho những bước đi có chủ đích.</span>
+    </div>
 </footer>
 </body>
 </html>

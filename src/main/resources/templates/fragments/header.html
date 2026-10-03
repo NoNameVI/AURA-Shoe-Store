@@ -1,16 +1,24 @@
 <!DOCTYPE html>
-<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+<html lang="vi" xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
 <body>
 <header class="site-header" th:fragment="siteHeader">
-    <a class="brand" th:href="@{/}">AURA Store</a>
-    <nav aria-label="Điều hướng chính">
-        <a th:href="@{/products}">Sản phẩm</a>
-        <a th:href="@{/wishlist}">Yêu thích</a>
-        <a th:href="@{/cart}">Giỏ hàng</a>
-        <a th:href="@{/account/orders}">Đơn hàng</a>
-        <a th:href="@{/management}">Quản lý</a>
-    </nav>
-    <a class="button-link" th:href="@{/login}">Đăng nhập</a>
+    <div class="site-header-inner">
+        <a class="brand" th:href="@{/}" aria-label="AURA Footwear - trang chủ">AURA<span>FOOTWEAR</span></a>
+        <nav class="site-main-nav" aria-label="Điều hướng chính">
+            <a th:href="@{/products}">Bộ sưu tập</a>
+            <a th:href="@{/#story}">Câu chuyện AURA</a>
+            <a sec:authorize="hasAuthority('catalog.read')" th:href="@{/management/products}">Quản lý</a>
+        </nav>
+        <nav class="site-utility-nav" aria-label="Tài khoản và giỏ hàng">
+            <a sec:authorize="isAnonymous()" th:href="@{/login}">Đăng nhập</a>
+            <a class="utility-account" sec:authorize="isAuthenticated()" th:href="@{/account/profile}">Tài khoản</a>
+            <a class="utility-wishlist" th:href="@{/wishlist}" aria-label="Danh sách yêu thích">Yêu thích</a>
+            <a class="utility-cart" th:href="@{/cart}" aria-label="Giỏ hàng">Giỏ hàng <span aria-hidden="true">↗</span></a>
+            <form class="utility-logout" sec:authorize="isAuthenticated()" th:action="@{/logout}" method="post">
+                <button type="submit">Đăng xuất</button>
+            </form>
+        </nav>
+    </div>
 </header>
 </body>
 </html>

@@ -1,21 +1,71 @@
 <!DOCTYPE html>
 <html lang="vi" xmlns:th="http://www.thymeleaf.org">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Danh sách sản phẩm | AURA Store</title>
+    <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Bộ sưu tập | AURA Footwear</title>
     <link rel="stylesheet" th:href="@{/css/app.css}">
 </head>
-<body>
+<body class="shop-page">
 <header th:replace="~{fragments/header :: siteHeader}"></header>
-<main class="page-shell">
-    <section class="page-card">
-        <p class="eyebrow">AURA Store</p>
-        <h1>Danh sách sản phẩm</h1>
-        <p>Tìm kiếm, lọc và phân trang sản phẩm.</p>
-        <div class="placeholder">
-            <strong>Khung giao diện đã sẵn sàng.</strong>
-            <span>Dữ liệu và thao tác sẽ được nối khi triển khai feature.</span>
+<main class="shop-container shop-catalog">
+    <div class="shop-breadcrumb"><a th:href="@{/}">Trang chủ</a><span>/</span><span>Bộ sưu tập</span></div>
+    <section class="shop-collection-heading">
+        <div>
+            <p class="shop-kicker">THE AURA COLLECTION / 01</p>
+            <h1>Khám phá giày</h1>
+            <p>Những thiết kế dành cho mọi hành trình, được chọn lọc với sự tinh tế.</p>
+        </div>
+        <span class="shop-count" th:text="|${products.totalElements} thiết kế|">0 thiết kế</span>
+    </section>
+    <section class="shop-catalog-layout" aria-label="Danh sách sản phẩm">
+        <aside class="shop-filter-panel">
+            <div class="shop-filter-heading"><h2>Bộ lọc</h2><span>01 — 03</span></div>
+            <form class="shop-filter-form" th:action="@{/products}" method="get">
+                <label>TÌM KIẾM
+                    <input name="keyword" th:value="${keyword}" placeholder="Tên sản phẩm...">
+                </label>
+                <label>THƯƠNG HIỆU
+                    <select name="brandId"><option value="">Tất cả thương hiệu</option>
+                        <option th:each="brand : ${brands}" th:value="${brand.id}" th:text="${brand.brandName}"
+                                th:selected="${brand.id == brandId}"></option></select>
+                </label>
+                <label>DANH MỤC
+                    <select name="categoryId"><option value="">Tất cả danh mục</option>
+                        <option th:each="category : ${categories}" th:value="${category.id}" th:text="${category.categoryName}"
+                                th:selected="${category.id == categoryId}"></option></select>
+                </label>
+                <button class="primary-button" type="submit">Áp dụng bộ lọc <span aria-hidden="true">↗</span></button>
+                <a class="shop-reset-link" th:href="@{/products}">Xóa bộ lọc</a>
+            </form>
+        </aside>
+        <div class="shop-results">
+            <div class="shop-results-bar"><span th:text="|Hiển thị ${products.numberOfElements} / ${products.totalElements} sản phẩm|">Sản phẩm</span><span>ĐƯỢC CHỌN LỌC BỞI AURA</span></div>
+            <div class="shop-empty" th:if="${products.empty}">
+                <h2>Chưa tìm thấy thiết kế phù hợp.</h2>
+                <p>Thử thay đổi từ khóa hoặc bộ lọc để khám phá thêm.</p>
+                <a class="outline-button" th:href="@{/products}">Xem toàn bộ sản phẩm</a>
+            </div>
+            <div class="shop-product-grid" th:unless="${products.empty}">
+                <a class="shop-product-card" th:each="product : ${products.content}"
+                   th:href="@{/products/{id}(id=${product.id})}">
+                    <span class="shop-product-image-wrap">
+                        <img th:src="${product.primaryImageUrl != null ? product.primaryImageUrl : '/images/demo/shoe-placeholder.svg'}"
+                             th:alt="${product.productName}" loading="lazy">
+                        <span class="shop-stock-tag" th:if="${!product.available}">TẠM HẾT HÀNG</span>
+                        <span class="shop-card-arrow" aria-hidden="true">↗</span>
+                    </span>
+                    <span class="shop-product-meta" th:text="${product.brandName}">Thương hiệu</span>
+                    <span class="shop-product-title" th:text="${product.productName}">Tên sản phẩm</span>
+                    <span class="shop-product-price" th:text="${product.lowestPrice != null ? 'Từ ' + #numbers.formatDecimal(product.lowestPrice, 1, 'POINT', 0, 'COMMA') + ' ₫' : 'Liên hệ'}">Giá</span>
+                </a>
+            </div>
+            <nav class="shop-pagination" th:if="${products.totalPages > 1}" aria-label="Phân trang">
+                <a th:if="${products.hasPrevious()}"
+                   th:href="@{/products(keyword=${keyword},brandId=${brandId},categoryId=${categoryId},page=${products.number - 1})}">← Trang trước</a>
+                <span th:text="|${products.number + 1} / ${products.totalPages}|"></span>
+                <a th:if="${products.hasNext()}"
+                   th:href="@{/products(keyword=${keyword},brandId=${brandId},categoryId=${categoryId},page=${products.number + 1})}">Trang sau →</a>
+            </nav>
         </div>
     </section>
 </main>
@@ -23,4 +73,3 @@
 <script th:src="@{/js/app.js}"></script>
 </body>
 </html>
-

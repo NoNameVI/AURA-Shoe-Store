@@ -1,21 +1,55 @@
 <!DOCTYPE html>
 <html lang="vi" xmlns:th="http://www.thymeleaf.org">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Chi tiết sản phẩm | AURA Store</title>
+    <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+    <title th:text="${product.productName + ' | AURA Footwear'}">Chi tiết sản phẩm | AURA Footwear</title>
     <link rel="stylesheet" th:href="@{/css/app.css}">
 </head>
-<body>
+<body class="shop-page">
 <header th:replace="~{fragments/header :: siteHeader}"></header>
-<main class="page-shell">
-    <section class="page-card">
-        <p class="eyebrow">AURA Store</p>
-        <h1>Chi tiết sản phẩm</h1>
-        <p>Thông tin sản phẩm, biến thể, tồn khả dụng, hình ảnh và đánh giá.</p>
-        <div class="placeholder">
-            <strong>Khung giao diện đã sẵn sàng.</strong>
-            <span>Dữ liệu và thao tác sẽ được nối khi triển khai feature.</span>
+<main class="shop-container shop-detail-page">
+    <div class="shop-breadcrumb"><a th:href="@{/}">Trang chủ</a><span>/</span><a th:href="@{/products}">Bộ sưu tập</a><span>/</span><span th:text="${product.productName}">Sản phẩm</span></div>
+    <section class="shop-detail-layout">
+        <div class="shop-detail-media">
+            <div class="shop-detail-main-image">
+                <img data-product-main-image
+                     th:src="${product.primaryImageUrl != null ? product.primaryImageUrl : '/images/demo/shoe-placeholder.svg'}"
+                     th:alt="${product.productName}">
+                <span class="shop-image-counter" th:if="${!product.images.empty}" th:text="|01 / ${product.images.size()}|">01 / 01</span>
+            </div>
+            <div class="shop-thumbnails" th:if="${!product.images.empty}" aria-label="Ảnh sản phẩm">
+                <button type="button" th:each="image, stat : ${product.images}"
+                        th:classappend="${stat.first} ? ' is-active' : ''"
+                        th:attr="data-image-src=${image.imageUrl},data-image-alt=${image.altText},data-image-index=${stat.count}"
+                        th:aria-label="|Xem ảnh ${stat.count}|">
+                    <img th:src="${image.imageUrl}" th:alt="${image.altText}">
+                </button>
+            </div>
+        </div>
+        <div class="shop-detail-info">
+            <p class="shop-kicker" th:text="${product.brandName}">AURA</p>
+            <h1 th:text="${product.productName}">Tên sản phẩm</h1>
+            <p class="shop-detail-category" th:text="${product.categoryName}">Danh mục</p>
+            <p class="shop-detail-price" th:text="${product.lowestPrice != null ? 'Từ ' + #numbers.formatDecimal(product.lowestPrice, 1, 'POINT', 0, 'COMMA') + ' ₫' : 'Liên hệ'}">Giá</p>
+            <div class="shop-detail-divider"></div>
+            <p class="shop-detail-description" th:text="${product.description ?: 'Thiết kế được chọn lọc cho những bước đi tự tin mỗi ngày.'}">Mô tả</p>
+            <div class="shop-size-section">
+                <div class="shop-size-heading"><h2>Kích cỡ & màu sắc</h2><span th:text="${product.available ? 'CÒN HÀNG' : 'TẠM HẾT HÀNG'}">Tình trạng</span></div>
+                <p>Chọn một lựa chọn để xem giá và tình trạng.</p>
+                <div class="shop-size-matrix" th:if="${!product.variants.empty}">
+                    <button type="button" class="shop-size-option" th:each="variant : ${product.variants}"
+                            th:if="${variant.active}" th:disabled="${variant.availableQuantity <= 0}"
+                            th:attr="data-variant-price=${#numbers.formatDecimal(variant.salePrice, 1, 'POINT', 0, 'COMMA')},data-variant-sku=${variant.sku},data-variant-stock=${variant.availableQuantity}"
+                            aria-pressed="false">
+                        <strong th:text="${variant.sizeCode}">40</strong>
+                        <span th:text="${variant.colorName}">Màu</span>
+                    </button>
+                </div>
+                <p class="shop-size-feedback" data-variant-feedback aria-live="polite"
+                   th:text="${product.variants.empty ? 'Chưa có lựa chọn kích cỡ.' : 'Các ô mờ hiện đang hết hàng.'}">Chọn kích cỡ.</p>
+            </div>
+            <div class="shop-detail-note"><span>01</span><p>Thông tin tồn kho được cập nhật theo từng biến thể.</p></div>
+            <a class="outline-button shop-back-link" th:href="@{/products}">Tiếp tục khám phá <span aria-hidden="true">↗</span></a>
         </div>
     </section>
 </main>
@@ -23,4 +57,3 @@
 <script th:src="@{/js/app.js}"></script>
 </body>
 </html>
-

@@ -1,26 +1,84 @@
 <!DOCTYPE html>
-<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+<html lang="vi" xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Quản lý danh mục | AURA Store</title>
     <link rel="stylesheet" th:href="@{/css/app.css}">
 </head>
 <body>
 <header th:replace="~{fragments/header :: siteHeader}"></header>
-<main class="page-shell">
-    <section class="page-card">
-        <p class="eyebrow">AURA Store</p>
-        <h1>Quản lý danh mục</h1>
-        <p>Cây danh mục sản phẩm.</p>
-        <div class="placeholder">
-            <strong>Khung giao diện đã sẵn sàng.</strong>
-            <span>Dữ liệu và thao tác sẽ được nối khi triển khai feature.</span>
-        </div>
-    </section>
+<main class="page-shell catalog-page">
+    <div class="catalog-heading">
+        <div><p class="eyebrow">Quản lý danh mục</p><h1>Danh mục sản phẩm</h1>
+            <p>Quản lý cây danh mục và quan hệ danh mục cha.</p></div>
+        <nav class="catalog-links"><a th:href="@{/management/brands}">Thương hiệu</a>
+            <a th:href="@{/management/products}">Sản phẩm</a></nav>
+    </div>
+    <p class="form-message" th:if="${success}" th:text="${success}"></p>
+    <p class="form-message error" th:if="${error}" th:text="${error}"></p>
+    <div class="catalog-layout">
+        <section class="page-card">
+            <h2>Danh sách danh mục</h2>
+            <form class="catalog-search" th:action="@{/management/categories}" method="get">
+                <label for="categoryKeyword">Tên hoặc slug</label>
+                <input id="categoryKeyword" name="keyword" th:value="${keyword}" placeholder="Tìm danh mục">
+                <button class="primary-button" type="submit">Tìm kiếm</button>
+            </form>
+            <div class="table-scroll"><table class="data-table">
+                <thead><tr><th>Tên</th><th>Danh mục cha</th><th>Trạng thái</th><th>Thao tác</th></tr></thead>
+                <tbody>
+                <tr th:each="category : ${categories.content}">
+                    <td><strong th:text="${category.categoryName}">Danh mục</strong><br>
+                        <small th:text="${category.slug}">slug</small><br>
+                        <small th:text="${category.description}"></small></td>
+                    <td th:text="${category.parentName ?: '—'}">Danh mục cha</td>
+                    <td th:text="${category.active ? 'Hoạt động' : 'Đã tắt'}">Trạng thái</td>
+                    <td class="actions">
+                        <a sec:authorize="hasAuthority('catalog.manage')"
+                           th:href="@{/management/categories/{id}/edit(id=${category.id})}">Sửa</a>
+                        <form th:action="@{/management/categories/{id}/delete(id=${category.id})}"
+                              sec:authorize="hasAuthority('catalog.manage')"
+                              method="post" onsubmit="return confirm('Xóa danh mục này?')">
+                            <button class="text-button danger" type="submit">Xóa</button>
+                        </form>
+                    </td>
+                </tr>
+                <tr th:if="${categories.empty}"><td colspan="4">Không tìm thấy danh mục.</td></tr>
+                </tbody>
+            </table></div>
+            <nav class="pagination" th:if="${categories.totalPages > 1}" aria-label="Phân trang">
+                <a th:if="${categories.hasPrevious()}"
+                   th:href="@{/management/categories(keyword=${keyword},page=${categories.number - 1})}">Trang trước</a>
+                <span th:text="|Trang ${categories.number + 1} / ${categories.totalPages}|"></span>
+                <a th:if="${categories.hasNext()}"
+                   th:href="@{/management/categories(keyword=${keyword},page=${categories.number + 1})}">Trang sau</a>
+            </nav>
+        </section>
+        <section class="page-card" sec:authorize="hasAuthority('catalog.manage')">
+            <h2 th:text="${editId != null ? 'Chi tiết / sửa danh mục' : 'Thêm danh mục'}">Thêm danh mục</h2>
+            <form class="catalog-form" th:object="${categoryForm}" method="post"
+                  th:action="${editId != null} ? @{/management/categories/{id}(id=${editId})} : @{/management/categories}">
+                <label>Tên danh mục <input th:field="*{categoryName}" maxlength="150" required></label>
+                <small class="field-error" th:if="${#fields.hasErrors('categoryName')}" th:errors="*{categoryName}"></small>
+                <label>Slug <input th:field="*{slug}" maxlength="160" pattern="[a-z0-9]+(-[a-z0-9]+)*" required></label>
+                <small class="field-error" th:if="${#fields.hasErrors('slug')}" th:errors="*{slug}"></small>
+                <label>Danh mục cha
+                    <select th:field="*{parentId}">
+                        <option value="">Không có</option>
+                        <option th:each="parent : ${parentOptions}" th:if="${editId == null or parent.id != editId}"
+                                th:value="${parent.id}" th:text="${parent.categoryName}"></option>
+                    </select>
+                </label>
+                <label>Mô tả <textarea th:field="*{description}" maxlength="1000" rows="4"></textarea></label>
+                <label class="check-field"><input type="checkbox" th:field="*{active}"> Đang hoạt động</label>
+                <div class="actions">
+                    <button class="primary-button" type="submit" th:text="${editId != null ? 'Lưu thay đổi' : 'Thêm danh mục'}"></button>
+                    <a th:if="${editId != null}" th:href="@{/management/categories}">Hủy sửa</a>
+                </div>
+            </form>
+        </section>
+    </div>
 </main>
 <footer th:replace="~{fragments/footer :: siteFooter}"></footer>
-<script th:src="@{/js/app.js}"></script>
 </body>
 </html>
-

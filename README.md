@@ -548,8 +548,15 @@ Các tài khoản được tạo: `demo.warehouse.creator`, `demo.warehouse.appr
 `your_local_password`; script chỉ lưu BCrypt hash đã kiểm tra bằng
 `BCryptPasswordEncoder`. Chuỗi này trùng với mật khẩu MySQL local trong ví dụ
 README theo yêu cầu demo, nhưng hai loại tài khoản độc lập. Không dùng cách đặt
-trùng mật khẩu này ngoài môi trường phát triển. Chức năng xác thực tài khoản từ
-database hiện vẫn là skeleton; seed dữ liệu chưa tự làm giao diện đăng nhập hoạt động.
+trùng mật khẩu này ngoài môi trường phát triển. Form `/login` hiện xác thực
+username hoặc email từ `accounts` bằng BCrypt. Quyền nhân viên được lấy từ
+`staffs`, `roles`, `role_permissions` và `permissions`; tài khoản đã tắt, bị
+khóa, xóa mềm hoặc chỉ dùng Google không thể đăng nhập bằng mật khẩu.
+`demo.warehouse.creator` có quyền `catalog.read` và `catalog.manage` để thử
+`/management/products`, `/management/categories`, `/management/brands`.
+`demo.sales` chỉ có `catalog.read`; `demo.customer` không vào được `/management`.
+Test tích hợp tài khoản demo chỉ chạy khi đặt `AURA_RUN_DEMO_LOGIN_IT=true` và
+`AURA_DB_PASSWORD` cho database phát triển đã seed V5.
 Script tạo hành trình nhập 100 đôi AURA Sprint và 60 đôi Nova Core, bán 2 đôi
 Sprint, nhận trả 1 đôi, hoàn tiền một phần, kiểm kê giảm 1 đôi Nova Core, cùng
 đơn hàng COD, lịch sử trạng thái, đánh giá, giỏ hàng, yêu thích và audit log.

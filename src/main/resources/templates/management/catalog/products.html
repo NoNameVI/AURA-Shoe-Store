@@ -1,26 +1,72 @@
 <!DOCTYPE html>
-<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+<html lang="vi" xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Quản lý sản phẩm | AURA Store</title>
     <link rel="stylesheet" th:href="@{/css/app.css}">
 </head>
 <body>
 <header th:replace="~{fragments/header :: siteHeader}"></header>
-<main class="page-shell">
+<main class="page-shell catalog-page">
+    <div class="catalog-heading">
+        <div><p class="eyebrow">Quản lý danh mục</p><h1>Sản phẩm</h1>
+            <p>Quản lý mẫu giày, trạng thái công bố, biến thể và ảnh.</p></div>
+        <nav class="catalog-links"><a th:href="@{/management/brands}">Thương hiệu</a>
+            <a th:href="@{/management/categories}">Danh mục</a>
+            <a class="primary-button" sec:authorize="hasAuthority('catalog.manage')"
+               th:href="@{/management/products/new}">Thêm sản phẩm</a></nav>
+    </div>
+    <p class="form-message" th:if="${success}" th:text="${success}"></p>
     <section class="page-card">
-        <p class="eyebrow">AURA Store</p>
-        <h1>Quản lý sản phẩm</h1>
-        <p>Sản phẩm, biến thể, giá, ảnh và trạng thái xuất bản.</p>
-        <div class="placeholder">
-            <strong>Khung giao diện đã sẵn sàng.</strong>
-            <span>Dữ liệu và thao tác sẽ được nối khi triển khai feature.</span>
-        </div>
+        <form class="catalog-filters" th:action="@{/management/products}" method="get">
+            <label>Từ khóa <input name="keyword" th:value="${keyword}" placeholder="Tên, slug, mã mẫu"></label>
+            <label>Thương hiệu <select name="brandId">
+                <option value="">Tất cả</option>
+                <option th:each="brand : ${brands}" th:value="${brand.id}" th:text="${brand.brandName}"
+                        th:selected="${brand.id == brandId}"></option>
+            </select></label>
+            <label>Danh mục <select name="categoryId">
+                <option value="">Tất cả</option>
+                <option th:each="category : ${categories}" th:value="${category.id}" th:text="${category.categoryName}"
+                        th:selected="${category.id == categoryId}"></option>
+            </select></label>
+            <label>Trạng thái <select name="status">
+                <option value="">Tất cả</option>
+                <option th:each="option : ${statuses}" th:value="${option}" th:text="${option}"
+                        th:selected="${option == status}"></option>
+            </select></label>
+            <button class="primary-button" type="submit">Lọc</button>
+        </form>
+        <div class="table-scroll"><table class="data-table">
+            <thead><tr><th>Sản phẩm</th><th>Thương hiệu</th><th>Danh mục</th><th>Giá từ</th><th>Trạng thái</th><th>Thao tác</th></tr></thead>
+            <tbody>
+            <tr th:each="product : ${products.content}">
+                <td class="product-cell">
+                    <img th:src="${product.primaryImageUrl != null ? product.primaryImageUrl : '/images/demo/shoe-placeholder.svg'}"
+                         th:alt="${product.productName}">
+                    <span><strong th:text="${product.productName}">Tên sản phẩm</strong><br>
+                        <small th:text="${product.styleCode ?: product.slug}">Mã mẫu</small></span>
+                </td>
+                <td th:text="${product.brandName}">Thương hiệu</td>
+                <td th:text="${product.categoryName}">Danh mục</td>
+                <td th:text="${product.lowestPrice != null ? product.lowestPrice + ' ₫' : 'Chưa có biến thể'}">Giá</td>
+                <td th:text="${product.publicationStatus}">DRAFT</td>
+                <td class="actions"><a th:href="@{/management/products/{id}(id=${product.id})}">Chi tiết</a>
+                    <a sec:authorize="hasAuthority('catalog.manage')"
+                       th:href="@{/management/products/{id}/edit(id=${product.id})}">Sửa</a></td>
+            </tr>
+            <tr th:if="${products.empty}"><td colspan="6">Không có sản phẩm phù hợp.</td></tr>
+            </tbody>
+        </table></div>
+        <nav class="pagination" th:if="${products.totalPages > 1}" aria-label="Phân trang">
+            <a th:if="${products.hasPrevious()}"
+               th:href="@{/management/products(keyword=${keyword},brandId=${brandId},categoryId=${categoryId},status=${status},page=${products.number - 1})}">Trang trước</a>
+            <span th:text="|Trang ${products.number + 1} / ${products.totalPages}|"></span>
+            <a th:if="${products.hasNext()}"
+               th:href="@{/management/products(keyword=${keyword},brandId=${brandId},categoryId=${categoryId},status=${status},page=${products.number + 1})}">Trang sau</a>
+        </nav>
     </section>
 </main>
 <footer th:replace="~{fragments/footer :: siteFooter}"></footer>
-<script th:src="@{/js/app.js}"></script>
 </body>
 </html>
-

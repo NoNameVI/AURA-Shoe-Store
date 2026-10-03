@@ -1,26 +1,80 @@
 <!DOCTYPE html>
-<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+<html lang="vi" xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Quản lý thương hiệu | AURA Store</title>
     <link rel="stylesheet" th:href="@{/css/app.css}">
 </head>
 <body>
 <header th:replace="~{fragments/header :: siteHeader}"></header>
-<main class="page-shell">
-    <section class="page-card">
-        <p class="eyebrow">AURA Store</p>
-        <h1>Quản lý thương hiệu</h1>
-        <p>Danh sách thương hiệu sản phẩm.</p>
-        <div class="placeholder">
-            <strong>Khung giao diện đã sẵn sàng.</strong>
-            <span>Dữ liệu và thao tác sẽ được nối khi triển khai feature.</span>
-        </div>
-    </section>
+<main class="page-shell catalog-page">
+    <div class="catalog-heading">
+        <div><p class="eyebrow">Quản lý danh mục</p><h1>Thương hiệu</h1>
+            <p>Tra cứu, thêm, sửa và xóa thương hiệu chưa được sản phẩm sử dụng.</p></div>
+        <nav class="catalog-links"><a th:href="@{/management/categories}">Danh mục</a>
+            <a th:href="@{/management/products}">Sản phẩm</a></nav>
+    </div>
+    <p class="form-message" th:if="${success}" th:text="${success}"></p>
+    <p class="form-message error" th:if="${error}" th:text="${error}"></p>
+    <div class="catalog-layout">
+        <section class="page-card">
+            <h2>Danh sách thương hiệu</h2>
+            <form class="catalog-search" th:action="@{/management/brands}" method="get">
+                <label for="brandKeyword">Tên hoặc slug</label>
+                <input id="brandKeyword" name="keyword" th:value="${keyword}" placeholder="Tìm thương hiệu">
+                <button class="primary-button" type="submit">Tìm kiếm</button>
+            </form>
+            <div class="table-scroll"><table class="data-table">
+                <thead><tr><th>Tên</th><th>Slug</th><th>Trạng thái</th><th>Thao tác</th></tr></thead>
+                <tbody>
+                <tr th:each="brand : ${brands.content}">
+                    <td><img class="brand-logo" th:if="${brand.logoUrl != null}"
+                             th:src="${brand.logoUrl}" th:alt="${brand.brandName}">
+                        <strong th:text="${brand.brandName}">Tên thương hiệu</strong><br>
+                        <small th:text="${brand.description}"></small></td>
+                    <td th:text="${brand.slug}">slug</td>
+                    <td th:text="${brand.active ? 'Hoạt động' : 'Đã tắt'}">Trạng thái</td>
+                    <td class="actions">
+                        <a sec:authorize="hasAuthority('catalog.manage')"
+                           th:href="@{/management/brands/{id}/edit(id=${brand.id})}">Sửa</a>
+                        <form th:action="@{/management/brands/{id}/delete(id=${brand.id})}" method="post"
+                              sec:authorize="hasAuthority('catalog.manage')"
+                              onsubmit="return confirm('Xóa thương hiệu này?')">
+                            <button class="text-button danger" type="submit">Xóa</button>
+                        </form>
+                    </td>
+                </tr>
+                <tr th:if="${brands.empty}"><td colspan="4">Không tìm thấy thương hiệu.</td></tr>
+                </tbody>
+            </table></div>
+            <nav class="pagination" th:if="${brands.totalPages > 1}" aria-label="Phân trang">
+                <a th:if="${brands.hasPrevious()}"
+                   th:href="@{/management/brands(keyword=${keyword},page=${brands.number - 1})}">Trang trước</a>
+                <span th:text="|Trang ${brands.number + 1} / ${brands.totalPages}|"></span>
+                <a th:if="${brands.hasNext()}"
+                   th:href="@{/management/brands(keyword=${keyword},page=${brands.number + 1})}">Trang sau</a>
+            </nav>
+        </section>
+        <section class="page-card" sec:authorize="hasAuthority('catalog.manage')">
+            <h2 th:text="${editId != null ? 'Chi tiết / sửa thương hiệu' : 'Thêm thương hiệu'}">Thêm thương hiệu</h2>
+            <form class="catalog-form" th:object="${brandForm}" method="post"
+                  th:action="${editId != null} ? @{/management/brands/{id}(id=${editId})} : @{/management/brands}">
+                <label>Tên thương hiệu <input th:field="*{brandName}" maxlength="150" required></label>
+                <small class="field-error" th:if="${#fields.hasErrors('brandName')}" th:errors="*{brandName}"></small>
+                <label>Slug <input th:field="*{slug}" maxlength="160" pattern="[a-z0-9]+(-[a-z0-9]+)*" required></label>
+                <small class="field-error" th:if="${#fields.hasErrors('slug')}" th:errors="*{slug}"></small>
+                <label>Mô tả <textarea th:field="*{description}" maxlength="1000" rows="4"></textarea></label>
+                <label>URL logo <input th:field="*{logoUrl}" maxlength="500" placeholder="https://... hoặc /images/..."></label>
+                <small class="field-error" th:if="${#fields.hasErrors('logoUrl')}" th:errors="*{logoUrl}"></small>
+                <label class="check-field"><input type="checkbox" th:field="*{active}"> Đang hoạt động</label>
+                <div class="actions">
+                    <button class="primary-button" type="submit" th:text="${editId != null ? 'Lưu thay đổi' : 'Thêm thương hiệu'}"></button>
+                    <a th:if="${editId != null}" th:href="@{/management/brands}">Hủy sửa</a>
+                </div>
+            </form>
+        </section>
+    </div>
 </main>
 <footer th:replace="~{fragments/footer :: siteFooter}"></footer>
-<script th:src="@{/js/app.js}"></script>
 </body>
 </html>
-

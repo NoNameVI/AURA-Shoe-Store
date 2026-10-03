@@ -3,17 +3,66 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>AURA Store</title>
+    <meta name="description" content="AURA Footwear - giay duoc chon loc cho nhung buoc di co chu dich.">
+    <title>AURA Footwear | Bước đi có chủ đích</title>
     <link rel="stylesheet" th:href="@{/css/app.css}">
 </head>
-<body>
+<body class="shop-page">
 <header th:replace="~{fragments/header :: siteHeader}"></header>
-<main class="page-shell">
-    <section class="hero">
-        <p class="eyebrow">AURA Shoe Store</p>
-        <h1>Kiến trúc đã sẵn sàng cho trải nghiệm mua sắm.</h1>
-        <p>Trang chủ hiện là skeleton Thymeleaf. Dữ liệu sản phẩm sẽ được nối qua ProductService.</p>
-        <a class="primary-button" th:href="@{/products}">Xem sản phẩm</a>
+<main>
+    <section class="shop-hero" aria-labelledby="hero-title">
+        <img class="shop-hero-image" th:src="@{/images/aura-editorial-hero.png}"
+             alt="Đôi giày da màu kem trên bệ đá trong không gian tối giản">
+        <div class="shop-hero-content">
+            <p class="shop-kicker">AURA / FOOTWEAR</p>
+            <h1 id="hero-title">Mỗi bước đi,<br><em>một dấu ấn riêng.</em></h1>
+            <p>Những thiết kế được chọn lọc cho chuyển động tự nhiên và vẻ đẹp bền lâu.</p>
+            <a class="primary-button" th:href="@{/products}">Khám phá bộ sưu tập <span aria-hidden="true">↗</span></a>
+        </div>
+        <span class="shop-hero-index">01 / THE AURA EDIT</span>
+    </section>
+
+    <section class="shop-intro shop-container" id="story">
+        <div class="shop-intro-label"><span class="line-mark"></span> TRIẾT LÝ AURA</div>
+        <div>
+            <h2>Vẻ đẹp nằm trong<br><em>những điều giản dị.</em></h2>
+            <p>Phom dáng tinh gọn, chất liệu giàu cảm xúc và sự thoải mái trong từng bước chân. Một tủ giày được lựa chọn với sự cân nhắc.</p>
+        </div>
+    </section>
+
+    <section class="shop-featured shop-container" aria-labelledby="featured-title">
+        <div class="shop-section-heading">
+            <div>
+                <p class="shop-kicker">CHỌN LỌC CHO BẠN</p>
+                <h2 id="featured-title">Dấu ấn mới</h2>
+            </div>
+            <a class="shop-text-link" th:href="@{/products}">Xem tất cả sản phẩm <span aria-hidden="true">↗</span></a>
+        </div>
+        <div class="shop-product-grid" th:if="${!featuredProducts.empty}">
+            <a class="shop-product-card" th:each="product : ${featuredProducts}"
+               th:href="@{/products/{id}(id=${product.id})}">
+                <span class="shop-product-image-wrap">
+                    <img th:src="${product.primaryImageUrl != null ? product.primaryImageUrl : '/images/demo/shoe-placeholder.svg'}"
+                         th:alt="${product.productName}" loading="lazy">
+                    <span class="shop-card-arrow" aria-hidden="true">↗</span>
+                </span>
+                <span class="shop-product-meta" th:text="${product.brandName}">AURA</span>
+                <span class="shop-product-title" th:text="${product.productName}">Tên sản phẩm</span>
+                <span class="shop-product-price" th:text="${product.lowestPrice != null ? 'Từ ' + #numbers.formatDecimal(product.lowestPrice, 1, 'POINT', 0, 'COMMA') + ' ₫' : 'Liên hệ'}">Giá</span>
+            </a>
+        </div>
+        <div class="shop-empty" th:if="${featuredProducts.empty}">
+            <p>Bộ sưu tập đang được hoàn thiện.</p>
+            <a class="shop-text-link" th:href="@{/products}">Khám phá danh mục <span aria-hidden="true">↗</span></a>
+        </div>
+    </section>
+
+    <section class="shop-manifesto">
+        <div class="shop-container shop-manifesto-inner">
+            <p class="shop-kicker">AURA JOURNAL / 01</p>
+            <h2>Thiết kế để đồng hành<br>cùng <em>nhịp sống của bạn.</em></h2>
+            <a class="outline-button" th:href="@{/products}">Tìm đôi giày dành cho bạn <span aria-hidden="true">↗</span></a>
+        </div>
     </section>
 </main>
 <footer th:replace="~{fragments/footer :: siteFooter}"></footer>

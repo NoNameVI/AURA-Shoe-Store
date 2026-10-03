@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="960" height="720" viewBox="0 0 960 720" role="img" aria-labelledby="title desc">
+  <title id="title">Ảnh minh họa giày mẫu AURA</title>
+  <desc id="desc">Hình vector minh họa, không phải ảnh sản phẩm thật.</desc>
+  <rect width="960" height="720" fill="#eeeae3"/>
+  <path d="M150 440c86 0 167-49 222-125 26-36 79-43 114-15l116 91c25 20 62 36 104 44l75 14c36 7 61 38 61 75v34H142c-19 0-34-15-34-34v-47c0-21 18-37 42-37z" fill="#b7a996"/>
+  <path d="M108 533h734v37c0 16-13 29-29 29H137c-16 0-29-13-29-29v-37z" fill="#f9f8f5" stroke="#6d665e" stroke-width="8"/>
+  <path d="M415 332l91 79m-55-92l90 78m-51-88l84 73" stroke="#eee6dc" stroke-width="15" stroke-linecap="round"/>
+  <text x="480" y="660" text-anchor="middle" font-family="Arial,sans-serif" font-size="26" fill="#6d665e">AURA · ẢNH MINH HỌA DEMO</text>
+</svg>
