@@ -13,6 +13,7 @@ import lombok.Setter;
 /**
  * Minimal JPA skeleton for the order_status_history table.
  * Business fields and associations are added with the feature implementation.
+ * TODO: Người phụ trách: Minh Thức.
  */
 @Getter
 @Setter

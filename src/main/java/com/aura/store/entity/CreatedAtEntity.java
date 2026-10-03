@@ -11,6 +11,7 @@ import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
 /**
  * Base type for records that only expose a creation timestamp.
+ * TODO: Người phụ trách: Minh Thức.
  */
 @Getter
 @Setter

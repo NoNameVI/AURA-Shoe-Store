@@ -11,6 +11,7 @@ import lombok.Setter;
 /**
  * Minimal JPA skeleton for the customers table.
  * Business fields and associations are added with the feature implementation.
+ * TODO: Người phụ trách: Minh Thức.
  */
 @Getter
 @Setter

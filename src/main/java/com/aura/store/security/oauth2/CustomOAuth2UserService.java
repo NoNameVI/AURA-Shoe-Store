@@ -8,6 +8,7 @@ import org.springframework.stereotype.Service;
 
 /**
  * Extension point for linking a Google identity to an AURA account.
+ * TODO: Người phụ trách: Khả Nhân.
  */
 @Service
 public class CustomOAuth2UserService extends DefaultOAuth2UserService {

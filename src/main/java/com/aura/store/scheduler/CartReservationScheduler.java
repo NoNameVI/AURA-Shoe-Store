@@ -6,6 +6,7 @@ import org.springframework.stereotype.Component;
 
 /**
  * Delegates cleanup of expired cart reservations to the shopping service.
+ * TODO: Người phụ trách: Thành Tài.
  */
 @Component
 public class CartReservationScheduler {

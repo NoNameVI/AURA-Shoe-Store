@@ -5,6 +5,7 @@ import org.springframework.data.jpa.repository.JpaRepository;
 
 /**
  * Persistence gateway for Review.
+ * TODO: Người phụ trách: Minh Phát, Minh Thức.
  */
 public interface ReviewRepository extends JpaRepository<Review, Long> {
 }

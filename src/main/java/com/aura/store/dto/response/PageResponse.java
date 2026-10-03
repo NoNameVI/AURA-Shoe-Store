@@ -4,6 +4,7 @@ import java.util.List;
 
 /**
  * Framework-independent pagination response.
+ * TODO: Người phụ trách: Minh Thức.
  */
 public record PageResponse<T>(
         List<T> content,

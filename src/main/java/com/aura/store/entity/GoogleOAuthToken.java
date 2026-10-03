@@ -11,6 +11,7 @@ import lombok.Setter;
 /**
  * Minimal JPA skeleton for the google_oauth_tokens table.
  * Business fields and associations are added with the feature implementation.
+ * TODO: Người phụ trách: Minh Thức.
  */
 @Getter
 @Setter

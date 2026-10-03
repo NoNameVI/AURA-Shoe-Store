@@ -6,6 +6,7 @@ import org.springframework.data.jpa.repository.JpaRepository;
 
 /**
  * Persistence gateway for RolePermission.
+ * TODO: Người phụ trách: Khả Nhân, Minh Thức.
  */
 public interface RolePermissionRepository extends JpaRepository<RolePermission, RolePermissionId> {
 }

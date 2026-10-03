@@ -6,6 +6,7 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 
 @Controller
+// TODO: Người phụ trách: Minh Phát, Thành Tài.
 public class CustomerOrderController {
 
     @GetMapping("/account/orders")

@@ -5,6 +5,7 @@ import org.springframework.web.bind.annotation.GetMapping;
 
 /**
  * Authentication and account-recovery pages.
+ * TODO: Người phụ trách: Khả Nhân.
  */
 @Controller
 public class AuthController {

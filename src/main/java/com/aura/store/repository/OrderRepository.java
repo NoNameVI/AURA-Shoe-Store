@@ -5,6 +5,7 @@ import org.springframework.data.jpa.repository.JpaRepository;
 
 /**
  * Persistence gateway for Order.
+ * TODO: Người phụ trách: Minh Phát, Minh Thức.
  */
 public interface OrderRepository extends JpaRepository<Order, Long> {
 }

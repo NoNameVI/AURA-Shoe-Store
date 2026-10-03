@@ -5,6 +5,7 @@ import org.springframework.data.jpa.repository.JpaRepository;
 
 /**
  * Persistence gateway for Account.
+ * TODO: Người phụ trách: Khả Nhân, Minh Thức.
  */
 public interface AccountRepository extends JpaRepository<Account, Long> {
 }

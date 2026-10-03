@@ -5,6 +5,7 @@ import org.mapstruct.Mapper;
 /**
  * Mapping contract shell for Brand.
  * MapStruct methods are added when the related DTO fields are finalized.
+ * TODO: Người phụ trách: Minh Thức.
  */
 @Mapper(config = AuraMapperConfig.class)
 public interface BrandMapper {

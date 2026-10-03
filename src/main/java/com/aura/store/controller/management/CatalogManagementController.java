@@ -4,6 +4,7 @@ import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.GetMapping;
 
 @Controller
+// TODO: Người phụ trách: Minh Thức.
 public class CatalogManagementController {
 
     @GetMapping("/management/products")

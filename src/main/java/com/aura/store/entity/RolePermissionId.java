@@ -16,6 +16,7 @@ import lombok.Setter;
 @AllArgsConstructor
 @EqualsAndHashCode
 @Embeddable
+// TODO: Người phụ trách: Minh Thức.
 public class RolePermissionId implements Serializable {
 
     @Serial

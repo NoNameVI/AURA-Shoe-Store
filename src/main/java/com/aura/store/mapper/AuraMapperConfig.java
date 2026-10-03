@@ -7,6 +7,7 @@ import org.mapstruct.ReportingPolicy;
 
 /**
  * Shared MapStruct policy for all application mappers.
+ * TODO: Người phụ trách: Minh Thức.
  */
 @MapperConfig(
         componentModel = MappingConstants.ComponentModel.SPRING,

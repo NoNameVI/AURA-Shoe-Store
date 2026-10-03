@@ -10,6 +10,7 @@ import org.springframework.security.web.SecurityFilterChain;
 /**
  * Central HTTP security configuration. Permission-specific rules are added with
  * each management feature.
+ * TODO: Người phụ trách: Khả Nhân.
  */
 @Configuration
 public class SecurityConfig {

@@ -5,6 +5,7 @@ import org.springframework.stereotype.Service;
 
 /**
  * Default implementation shell for PurchaseOrderService.
+ * TODO: Người phụ trách: Mai Thanh.
  */
 @Service
 public class PurchaseOrderServiceImpl implements PurchaseOrderService {

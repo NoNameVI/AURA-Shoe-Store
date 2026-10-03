@@ -9,6 +9,7 @@ import lombok.Setter;
 
 /**
  * Minimal JPA skeleton for the role_permissions join table.
+ * TODO: Người phụ trách: Minh Thức.
  */
 @Getter
 @Setter
