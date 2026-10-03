@@ -25,6 +25,6 @@ public class InventoryDocument extends TimestampedEntity {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "inventory_document_id", nullable = false)
-    private Long id;
+    private Integer id;
 }
 

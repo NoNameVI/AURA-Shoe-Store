@@ -14,7 +14,7 @@ public class AfterSalesManagementController {
     }
 
     @GetMapping("/management/after-sales/{requestId}")
-    public String requestDetailPage(@PathVariable Long requestId, Model model) {
+    public String requestDetailPage(@PathVariable Integer requestId, Model model) {
         model.addAttribute("requestId", requestId);
         return "management/after-sales/detail";
     }

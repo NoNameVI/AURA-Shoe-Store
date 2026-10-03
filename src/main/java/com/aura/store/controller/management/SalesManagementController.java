@@ -15,7 +15,7 @@ public class SalesManagementController {
     }
 
     @GetMapping("/management/orders/{orderId}")
-    public String orderDetailPage(@PathVariable Long orderId, Model model) {
+    public String orderDetailPage(@PathVariable Integer orderId, Model model) {
         model.addAttribute("orderId", orderId);
         return "management/sales/order-detail";
     }

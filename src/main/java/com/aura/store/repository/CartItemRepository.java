@@ -7,6 +7,6 @@ import org.springframework.data.jpa.repository.JpaRepository;
  * Persistence gateway for CartItem.
  * TODO: Người phụ trách: Minh Thức, Thành Tài.
  */
-public interface CartItemRepository extends JpaRepository<CartItem, Long> {
+public interface CartItemRepository extends JpaRepository<CartItem, Integer> {
 }
 

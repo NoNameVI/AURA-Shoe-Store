@@ -11,7 +11,7 @@ import org.springframework.security.core.userdetails.UserDetails;
  */
 public class AuraUserPrincipal implements UserDetails {
 
-    private final Long accountId;
+    private final Integer accountId;
     private final String username;
     private final String password;
     private final Collection<? extends GrantedAuthority> authorities;
@@ -19,7 +19,7 @@ public class AuraUserPrincipal implements UserDetails {
     private final boolean accountNonLocked;
 
     public AuraUserPrincipal(
-            Long accountId,
+            Integer accountId,
             String username,
             String password,
             Collection<? extends GrantedAuthority> authorities,
@@ -34,7 +34,7 @@ public class AuraUserPrincipal implements UserDetails {
         this.accountNonLocked = accountNonLocked;
     }
 
-    public Long getAccountId() {
+    public Integer getAccountId() {
         return accountId;
     }
 

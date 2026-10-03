@@ -25,6 +25,6 @@ public class Address extends TimestampedEntity {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "address_id", nullable = false)
-    private Long id;
+    private Integer id;
 }
 

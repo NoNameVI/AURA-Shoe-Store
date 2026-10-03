@@ -15,7 +15,7 @@ public class CustomerOrderController {
     }
 
     @GetMapping("/account/orders/{orderId}")
-    public String orderDetailPage(@PathVariable Long orderId, Model model) {
+    public String orderDetailPage(@PathVariable Integer orderId, Model model) {
         model.addAttribute("orderId", orderId);
         return "storefront/orders/detail";
     }

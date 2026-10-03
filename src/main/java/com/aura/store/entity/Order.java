@@ -25,6 +25,6 @@ public class Order extends TimestampedEntity {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "order_id", nullable = false)
-    private Long id;
+    private Integer id;
 }
 

@@ -25,6 +25,6 @@ public class ProductVariant extends TimestampedEntity {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "variant_id", nullable = false)
-    private Long id;
+    private Integer id;
 }
 

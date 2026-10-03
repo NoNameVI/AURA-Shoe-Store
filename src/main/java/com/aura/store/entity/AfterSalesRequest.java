@@ -25,6 +25,6 @@ public class AfterSalesRequest extends TimestampedEntity {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "after_sales_request_id", nullable = false)
-    private Long id;
+    private Integer id;
 }
 

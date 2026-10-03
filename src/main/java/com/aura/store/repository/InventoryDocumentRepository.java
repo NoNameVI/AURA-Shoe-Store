@@ -7,6 +7,6 @@ import org.springframework.data.jpa.repository.JpaRepository;
  * Persistence gateway for InventoryDocument.
  * TODO: Người phụ trách: Minh Thức, Thành Tài, Mai Thanh.
  */
-public interface InventoryDocumentRepository extends JpaRepository<InventoryDocument, Long> {
+public interface InventoryDocumentRepository extends JpaRepository<InventoryDocument, Integer> {
 }
 

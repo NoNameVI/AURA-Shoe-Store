@@ -25,6 +25,6 @@ public class ProductImage {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "image_id", nullable = false)
-    private Long id;
+    private Integer id;
 }
 

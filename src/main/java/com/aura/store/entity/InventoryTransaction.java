@@ -25,6 +25,6 @@ public class InventoryTransaction extends CreatedAtEntity {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "inventory_transaction_id", nullable = false)
-    private Long id;
+    private Integer id;
 }
 

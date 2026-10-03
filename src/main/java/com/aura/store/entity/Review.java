@@ -25,6 +25,6 @@ public class Review extends CreatedAtEntity {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "review_id", nullable = false)
-    private Long id;
+    private Integer id;
 }
 

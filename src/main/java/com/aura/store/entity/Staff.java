@@ -22,6 +22,6 @@ public class Staff extends TimestampedEntity {
 
     @Id
     @Column(name = "staff_id", nullable = false)
-    private Long id;
+    private Integer id;
 }
 

@@ -25,6 +25,6 @@ public class OrderStatusHistory extends CreatedAtEntity {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "order_status_history_id", nullable = false)
-    private Long id;
+    private Integer id;
 }
 

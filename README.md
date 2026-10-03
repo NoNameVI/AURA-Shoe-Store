@@ -185,8 +185,8 @@ Interface chỉ nên chứa chữ ký thể hiện use case. Không đưa JPA qu
 
 Các file đã tồn tại để thành viên không phải tự quyết định lại cấu trúc dự án:
 
-- 29 entity tương ứng 29 bảng, hai base entity và khóa ghép `RolePermissionId`.
-- 29 Spring Data repository.
+- 28 entity tương ứng 28 bảng, hai base entity và khóa ghép `RolePermissionId`.
+- 28 Spring Data repository.
 - Request/response DTO cho các use case chắc chắn có.
 - 24 service interface và implementation shell tương ứng.
 - Mapper contract theo aggregate chính.
@@ -227,9 +227,9 @@ Không chấp nhận:
 
 ## Thiết kế database
 
-Schema cập nhật sử dụng 29 bảng, 2 view và 13 trigger. Bảng
-`google_oauth_tokens` được tách riêng khỏi `accounts` để lưu thông tin liên kết
-Google OAuth. Các đối tượng database được chia thành các nhóm chính:
+Schema sau V4 sử dụng 28 bảng, 2 view và 13 trigger. Danh tính Google
+liên kết qua `accounts.oauth_subject`; ứng dụng không lưu access/refresh token
+Google trong database. Các đối tượng database được chia thành các nhóm chính:
 
 - IAM/RBAC: tài khoản, khách hàng, nhân viên, role, permission và audit log.
 - Catalog: thương hiệu, danh mục, sản phẩm, biến thể và hình ảnh.
@@ -340,7 +340,7 @@ GRANT ALL PRIVILEGES ON `aura_store`.* TO `aura_app`@`localhost`
 ```
 
 Không chạy file clean-install SQL bằng tay. Khi ứng dụng khởi động lần
-đầu, Flyway sẽ tự tạo 29 bảng nghiệp vụ, 2 view, 13 trigger và dữ
+đầu, Flyway sẽ tự tạo 28 bảng nghiệp vụ sau V4, 2 view, 13 trigger và dữ
 liệu role/permission.
 
 > Nếu `SET PERSIST` bị từ chối, chạy
@@ -438,7 +438,7 @@ Lần chạy đầu thành công sẽ có các log tương tự:
 
 ```text
 AuraHikariPool - Start completed
-Successfully applied 1 migration
+Successfully applied 5 migrations
 Tomcat started on port 8080
 Started AuraShoreStoreApplication
 ```
@@ -471,7 +471,7 @@ WHERE table_schema = 'aura_store'
   AND table_type = 'BASE TABLE';
 ```
 
-Migration V1 phải có `success = 1`. Schema nghiệp vụ có 29 bảng; MySQL
+Migration V1 đến V5 phải có `success = 1`. Schema nghiệp vụ có 28 bảng; MySQL
 còn hiển thị thêm `flyway_schema_history` do Flyway quản lý.
 
 ### 6. Đóng gói và chạy JAR
@@ -497,21 +497,78 @@ Migration đặt tại:
 src/main/resources/db/migration
 ```
 
-Migration khởi tạo hiện tại:
+Migration hiện tại:
 
 ```text
 V1__initialize_aura_schema.sql
+V2__standardize_numeric_ids_as_int.sql
+V3__seed_demo_catalog.sql
+V4__remove_google_oauth_tokens.sql
+V5__seed_demo_journey.sql
 ```
 
-Migration này được tạo từ bản SQL cập nhật, bao gồm 29 bảng, 2 view, 13 trigger
+V1 tạo schema ban đầu, bao gồm 29 bảng, 2 view, 13 trigger
 và dữ liệu nền cho role, permission, role-permission. Nó không chứa
 `DROP DATABASE`, `CREATE DATABASE`, `USE` hoặc các câu lệnh kiểm tra cài đặt.
+V2 chuyển toàn bộ ID dạng số và khóa ngoại tương ứng sang `INT` có dấu,
+giữ nguyên các cột số lượng `BIGINT`; database đã chạy V1 sẽ được nâng cấp
+khi ứng dụng khởi động. Trước khi chạy V2 trên database có dữ liệu, cần sao lưu:
+MySQL tự commit từng lệnh DDL, nên lỗi giữa migration có thể để lại schema
+chuyển đổi dở. V2 kiểm tra trước giá trị ID và bộ đếm `AUTO_INCREMENT` có
+vượt giới hạn `INT` hay không.
+V3 thêm dữ liệu danh mục mẫu có mã/slug cố định: 3 thương hiệu, 5 danh mục,
+2 nhà cung cấp, 8 sản phẩm `DRAFT` và 24 biến thể. Các biến thể có tồn kho 0;
+V3 không tạo tài khoản, ảnh, phiếu kho, đơn hàng hay thanh toán. Bộ dữ liệu mẫu
+này được Flyway chạy ở mọi môi trường dùng chung thư mục migration.
+V4 gỡ bảng `google_oauth_tokens` khỏi database đã chạy V1/V2. V1 và V2 được
+giữ nguyên để Flyway không báo sai checksum. Nếu trước đó đã có token trong bảng,
+hãy sao lưu trước khi khởi động với V4; thao tác gỡ bảng sẽ xóa các bản ghi đó.
+V5 tạo dữ liệu demo cho quy trình mua hàng, kho, bán hàng và hậu mãi. Vì nằm
+trong `db/migration`, nó tự chạy khi khởi động trên mọi database chưa áp dụng V5.
+V5 yêu cầu database phát triển mới chỉ có dữ liệu nền V1–V3; nếu đã có tài khoản,
+phiếu kho, đơn hàng, ảnh sản phẩm hoặc tồn kho, migration sẽ từ chối chạy.
 
 Migration tiếp theo đặt tên tăng dần:
 
 ```text
-V2__short_description.sql
-V3__short_description.sql
+V6__short_description.sql
+V7__short_description.sql
+```
+
+### Dữ liệu demo giao diện (tự chạy qua Flyway)
+
+`src/main/resources/db/migration/V5__seed_demo_journey.sql` tự chạy sau V4
+trên database rỗng của nhóm. Không chạy bản build có V5 trên production:
+nó tạo tài khoản với mật khẩu demo công khai và giao dịch giả lập. Nếu một
+database đã có dữ liệu nghiệp vụ, cần sao lưu và dùng database phát triển mới
+trước khi chạy V5; không xóa database có dữ liệu cần giữ chỉ để vượt qua guard.
+
+Các tài khoản được tạo: `demo.warehouse.creator`, `demo.warehouse.approver`,
+`demo.sales`, `demo.customer`, `demo.browser`. Cả năm được gán mật khẩu
+`your_local_password`; script chỉ lưu BCrypt hash đã kiểm tra bằng
+`BCryptPasswordEncoder`. Chuỗi này trùng với mật khẩu MySQL local trong ví dụ
+README theo yêu cầu demo, nhưng hai loại tài khoản độc lập. Không dùng cách đặt
+trùng mật khẩu này ngoài môi trường phát triển. Chức năng xác thực tài khoản từ
+database hiện vẫn là skeleton; seed dữ liệu chưa tự làm giao diện đăng nhập hoạt động.
+Script tạo hành trình nhập 100 đôi AURA Sprint và 60 đôi Nova Core, bán 2 đôi
+Sprint, nhận trả 1 đôi, hoàn tiền một phần, kiểm kê giảm 1 đôi Nova Core, cùng
+đơn hàng COD, lịch sử trạng thái, đánh giá, giỏ hàng, yêu thích và audit log.
+Ảnh sản phẩm dùng `/images/demo/shoe-placeholder.svg` — hình minh họa nội bộ,
+không phải ảnh sản phẩm thật. Sau seed, tồn Sprint size 40 là 99, Nova Core
+size 40 là 59 (trong đó 1 đôi được giữ trong giỏ). `google_oauth_tokens` không
+còn tồn tại; đăng nhập Google chỉ dùng `accounts.oauth_subject` để liên kết
+danh tính sau khi xác minh với Google.
+
+Kiểm tra kết quả sau khi Flyway chạy V5:
+
+```sql
+SELECT sku, stock_quantity, reserved_quantity, available_quantity
+FROM product_variants
+WHERE sku IN ('DEMO-AS01-GRY-40', 'DEMO-NC02-WHT-40');
+
+SELECT po_code, status FROM purchase_orders WHERE po_code = 'PO-DEMO-001';
+SELECT order_code, order_status, payment_status, total_amount
+FROM orders WHERE order_code = 'ORD-DEMO-001';
 ```
 
 Quy tắc:

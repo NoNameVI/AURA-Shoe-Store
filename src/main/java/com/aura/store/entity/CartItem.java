@@ -25,6 +25,6 @@ public class CartItem extends TimestampedEntity {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "cart_item_id", nullable = false)
-    private Long id;
+    private Integer id;
 }
 

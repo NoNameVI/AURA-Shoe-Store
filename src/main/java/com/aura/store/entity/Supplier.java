@@ -25,6 +25,6 @@ public class Supplier extends TimestampedEntity {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "supplier_id", nullable = false)
-    private Long id;
+    private Integer id;
 }
 

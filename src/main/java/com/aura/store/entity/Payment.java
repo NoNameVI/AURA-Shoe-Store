@@ -25,6 +25,6 @@ public class Payment extends TimestampedEntity {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "payment_id", nullable = false)
-    private Long id;
+    private Integer id;
 }
 

@@ -25,6 +25,6 @@ public class AuditLog extends CreatedAtEntity {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "audit_log_id", nullable = false)
-    private Long id;
+    private Integer id;
 }
 

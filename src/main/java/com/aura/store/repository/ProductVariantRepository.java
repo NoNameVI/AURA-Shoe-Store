@@ -7,6 +7,6 @@ import org.springframework.data.jpa.repository.JpaRepository;
  * Persistence gateway for ProductVariant.
  * TODO: Người phụ trách: Minh Thức, Thành Tài.
  */
-public interface ProductVariantRepository extends JpaRepository<ProductVariant, Long> {
+public interface ProductVariantRepository extends JpaRepository<ProductVariant, Integer> {
 }
 

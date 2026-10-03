@@ -22,6 +22,6 @@ public class Customer extends TimestampedEntity {
 
     @Id
     @Column(name = "customer_id", nullable = false)
-    private Long id;
+    private Integer id;
 }
 

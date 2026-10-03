@@ -25,6 +25,6 @@ public class WishlistItem extends CreatedAtEntity {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "wishlist_item_id", nullable = false)
-    private Long id;
+    private Integer id;
 }
 

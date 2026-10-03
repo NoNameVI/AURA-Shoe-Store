@@ -7,6 +7,6 @@ import org.springframework.data.jpa.repository.JpaRepository;
  * Persistence gateway for PurchaseOrder.
  * TODO: Người phụ trách: Minh Thức, Mai Thanh.
  */
-public interface PurchaseOrderRepository extends JpaRepository<PurchaseOrder, Long> {
+public interface PurchaseOrderRepository extends JpaRepository<PurchaseOrder, Integer> {
 }
 

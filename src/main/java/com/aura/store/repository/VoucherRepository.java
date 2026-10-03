@@ -7,6 +7,6 @@ import org.springframework.data.jpa.repository.JpaRepository;
  * Persistence gateway for Voucher.
  * TODO: Người phụ trách: Minh Thức, Thành Tài.
  */
-public interface VoucherRepository extends JpaRepository<Voucher, Long> {
+public interface VoucherRepository extends JpaRepository<Voucher, Integer> {
 }
 

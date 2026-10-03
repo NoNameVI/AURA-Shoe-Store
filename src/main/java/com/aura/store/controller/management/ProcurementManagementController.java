@@ -21,7 +21,7 @@ public class ProcurementManagementController {
 
     @GetMapping("/management/purchase-orders/{purchaseOrderId}")
     public String purchaseOrderDetailPage(
-            @PathVariable Long purchaseOrderId,
+            @PathVariable Integer purchaseOrderId,
             Model model
     ) {
         model.addAttribute("purchaseOrderId", purchaseOrderId);
