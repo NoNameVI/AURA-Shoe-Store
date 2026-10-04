@@ -26,5 +26,29 @@ public class Supplier extends TimestampedEntity {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "supplier_id", nullable = false)
     private Integer id;
+
+    @Column(name = "supplier_code", nullable = false, length = 50)
+    private String supplierCode;
+
+    @Column(name = "supplier_name", nullable = false, length = 180)
+    private String supplierName;
+
+    @Column(name = "contact_name", length = 150)
+    private String contactName;
+
+    @Column(name = "phone", length = 20)
+    private String phone;
+
+    @Column(name = "email", length = 255)
+    private String email;
+
+    @Column(name = "tax_code", length = 20)
+    private String taxCode;
+
+    @Column(name = "address_text", length = 500)
+    private String addressText;
+
+    @Column(name = "is_active", nullable = false)
+    private boolean active = true;
 }
 
