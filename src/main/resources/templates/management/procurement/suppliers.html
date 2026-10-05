@@ -1,26 +1,126 @@
 <!DOCTYPE html>
-<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+<html lang="vi" xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Quản lý nhà cung cấp | AURA Store</title>
     <link rel="stylesheet" th:href="@{/css/app.css}">
 </head>
 <body>
 <header th:replace="~{fragments/header :: siteHeader}"></header>
-<main class="page-shell">
-    <section class="page-card">
-        <p class="eyebrow">AURA Store</p>
-        <h1>Quản lý nhà cung cấp</h1>
-        <p>Thông tin và trạng thái nhà cung cấp.</p>
-        <div class="placeholder">
-            <strong>Khung giao diện đã sẵn sàng.</strong>
-            <span>Dữ liệu và thao tác sẽ được nối khi triển khai feature.</span>
-        </div>
-    </section>
+<main class="page-shell catalog-page">
+    <div class="catalog-heading">
+        <div><p class="eyebrow">Quản lý mua hàng</p><h1>Nhà cung cấp</h1>
+            <p>Tra cứu, xem chi tiết và quản lý trạng thái nhà cung cấp.</p></div>
+        <nav class="catalog-links"><a th:href="@{/management/purchase-orders}">Đơn đặt hàng</a>
+            <a th:href="@{/management/inventory}">Tồn kho</a></nav>
+    </div>
+
+    <p class="form-message" th:if="${success}" th:text="${success}"></p>
+    <p class="form-message error" th:if="${error}" th:text="${error}"></p>
+
+    <div class="catalog-layout">
+        <section class="page-card">
+            <h2>Danh sách nhà cung cấp</h2>
+            <form class="catalog-search" th:action="@{/management/suppliers}" method="get">
+                <label for="supplierKeyword">Mã, tên, liên hệ hoặc mã số thuế</label>
+                <input id="supplierKeyword" name="keyword" th:value="${keyword}"
+                       placeholder="Để trống để xem tất cả">
+                <button class="primary-button" type="submit">Tìm kiếm</button>
+            </form>
+
+            <div class="table-scroll"><table class="data-table">
+                <thead><tr><th>Nhà cung cấp</th><th>Liên hệ</th><th>Mã số thuế</th>
+                    <th>Trạng thái</th><th>Thao tác</th></tr></thead>
+                <tbody>
+                <tr th:each="supplier : ${suppliers.content}">
+                    <td><strong th:text="${supplier.supplierName}">Tên nhà cung cấp</strong><br>
+                        <small th:text="${supplier.supplierCode}">SUP-001</small></td>
+                    <td><span th:text="${supplier.contactName ?: '—'}">Người liên hệ</span><br>
+                        <small th:text="${supplier.phone ?: supplier.email ?: '—'}">Liên hệ</small></td>
+                    <td th:text="${supplier.taxCode ?: '—'}">Mã số thuế</td>
+                    <td th:text="${supplier.active ? 'Hoạt động' : 'Ngừng hoạt động'}">Trạng thái</td>
+                    <td class="actions">
+                        <a th:href="@{/management/suppliers/{id}(id=${supplier.id})}">Chi tiết / sửa</a>
+                        <form th:action="@{/management/suppliers/{id}/status(id=${supplier.id})}" method="post"
+                              th:with="nextStatus=${!supplier.active}"
+                              th:attr="onsubmit=${supplier.active} ? 'return confirm(\'Ngừng hoạt động nhà cung cấp này?\')' : null">
+                            <input type="hidden" name="active" th:value="${nextStatus}">
+                            <button class="text-button" th:classappend="${supplier.active} ? ' danger' : ''"
+                                    type="submit" th:text="${supplier.active ? 'Ngừng hoạt động' : 'Kích hoạt'}">
+                                Đổi trạng thái
+                            </button>
+                        </form>
+                    </td>
+                </tr>
+                <tr th:if="${#lists.isEmpty(suppliers.content)}"><td colspan="5">Không tìm thấy nhà cung cấp.</td></tr>
+                </tbody>
+            </table></div>
+
+            <nav class="pagination" th:if="${suppliers.totalPages > 1}" aria-label="Phân trang">
+                <a th:if="${suppliers.page > 0}"
+                   th:href="@{/management/suppliers(keyword=${keyword},page=${suppliers.page - 1})}">Trang trước</a>
+                <span th:text="|Trang ${suppliers.page + 1} / ${suppliers.totalPages}|"></span>
+                <a th:if="${suppliers.page + 1 < suppliers.totalPages}"
+                   th:href="@{/management/suppliers(keyword=${keyword},page=${suppliers.page + 1})}">Trang sau</a>
+            </nav>
+        </section>
+
+        <section class="page-card" sec:authorize="hasAuthority('supplier.manage')">
+            <h2 th:text="${editId != null ? 'Chi tiết / sửa nhà cung cấp' : 'Thêm nhà cung cấp'}">
+                Thêm nhà cung cấp
+            </h2>
+            <p class="helper-text" th:if="${supplierDetail != null}"
+               th:text="|Tạo lúc ${#temporals.format(supplierDetail.createdAt, 'dd/MM/yyyy HH:mm')} · Cập nhật lúc ${#temporals.format(supplierDetail.updatedAt, 'dd/MM/yyyy HH:mm')}|">
+            </p>
+            <form class="catalog-form" th:object="${supplierForm}" method="post"
+                  th:action="${editId != null} ? @{/management/suppliers/{id}(id=${editId})} : @{/management/suppliers}">
+                <label>Mã nhà cung cấp
+                    <input th:field="*{supplierCode}" maxlength="50" required>
+                </label>
+                <small class="field-error" th:if="${#fields.hasErrors('supplierCode')}" th:errors="*{supplierCode}"></small>
+
+                <label>Tên nhà cung cấp
+                    <input th:field="*{supplierName}" maxlength="180" required>
+                </label>
+                <small class="field-error" th:if="${#fields.hasErrors('supplierName')}" th:errors="*{supplierName}"></small>
+
+                <label>Người liên hệ
+                    <input th:field="*{contactName}" maxlength="150">
+                </label>
+                <small class="field-error" th:if="${#fields.hasErrors('contactName')}" th:errors="*{contactName}"></small>
+
+                <label>Số điện thoại
+                    <input th:field="*{phone}" maxlength="20" inputmode="tel" placeholder="0901234567 hoặc +84901234567">
+                </label>
+                <small class="field-error" th:if="${#fields.hasErrors('phone')}" th:errors="*{phone}"></small>
+
+                <label>Email
+                    <input type="email" th:field="*{email}" maxlength="255">
+                </label>
+                <small class="field-error" th:if="${#fields.hasErrors('email')}" th:errors="*{email}"></small>
+
+                <label>Mã số thuế
+                    <input th:field="*{taxCode}" maxlength="20" placeholder="0123456789 hoặc 0123456789-001">
+                </label>
+                <small class="field-error" th:if="${#fields.hasErrors('taxCode')}" th:errors="*{taxCode}"></small>
+
+                <label>Địa chỉ
+                    <textarea th:field="*{addressText}" maxlength="500" rows="4"></textarea>
+                </label>
+                <small class="field-error" th:if="${#fields.hasErrors('addressText')}" th:errors="*{addressText}"></small>
+
+                <label class="check-field"><input type="checkbox" th:field="*{active}"> Đang hoạt động</label>
+                <div class="actions">
+                    <button class="primary-button" type="submit"
+                            th:text="${editId != null ? 'Lưu thay đổi' : 'Thêm nhà cung cấp'}"></button>
+                    <a th:if="${editId != null}" th:href="@{/management/suppliers}">Hủy sửa</a>
+                </div>
+            </form>
+        </section>
+    </div>
 </main>
 <footer th:replace="~{fragments/footer :: siteFooter}"></footer>
-<script th:src="@{/js/app.js}"></script>
 </body>
 </html>
 
