@@ -13,6 +13,8 @@
             <p>Quản lý mẫu giày, trạng thái công bố, biến thể và ảnh.</p></div>
         <nav class="catalog-links"><a th:href="@{/management/brands}">Thương hiệu</a>
             <a th:href="@{/management/categories}">Danh mục</a>
+            <a sec:authorize="hasAuthority('supplier.manage')"
+               th:href="@{/management/suppliers}">Nhà cung cấp</a>
             <a class="primary-button" sec:authorize="hasAuthority('catalog.manage')"
                th:href="@{/management/products/new}">Thêm sản phẩm</a></nav>
     </div>
