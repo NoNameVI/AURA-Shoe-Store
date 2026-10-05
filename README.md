@@ -471,7 +471,7 @@ WHERE table_schema = 'aura_store'
   AND table_type = 'BASE TABLE';
 ```
 
-Migration V1 đến V5 phải có `success = 1`. Schema nghiệp vụ có 28 bảng; MySQL
+Migration V1 đến V6 phải có `success = 1`. Schema nghiệp vụ có 28 bảng; MySQL
 còn hiển thị thêm `flyway_schema_history` do Flyway quản lý.
 
 ### 6. Đóng gói và chạy JAR
@@ -505,6 +505,7 @@ V2__standardize_numeric_ids_as_int.sql
 V3__seed_demo_catalog.sql
 V4__remove_google_oauth_tokens.sql
 V5__seed_demo_journey.sql
+V6__seed_system_admin_demo_account.sql
 ```
 
 V1 tạo schema ban đầu, bao gồm 29 bảng, 2 view, 13 trigger
@@ -531,8 +532,8 @@ phiếu kho, đơn hàng, ảnh sản phẩm hoặc tồn kho, migration sẽ t�
 Migration tiếp theo đặt tên tăng dần:
 
 ```text
-V6__short_description.sql
 V7__short_description.sql
+V8__short_description.sql
 ```
 
 ### Dữ liệu demo giao diện (tự chạy qua Flyway)
@@ -557,12 +558,14 @@ khóa, xóa mềm hoặc chỉ dùng Google không thể đăng nhập bằng m�
 `demo.sales` chỉ có `catalog.read`; `demo.customer` không vào được `/management`.
 Test tích hợp tài khoản demo chỉ chạy khi đặt `AURA_RUN_DEMO_LOGIN_IT=true` và
 `AURA_DB_PASSWORD` cho database phát triển đã seed V5.
+V6 tạo tài khoản `demo.admin` với role `SYSTEM_ADMIN` và gán cho role này mọi
+permission đang active tại thời điểm migration chạy. V6 cũng chỉ dành cho môi
+trường phát triển; không đưa tài khoản hoặc mật khẩu demo lên production.
 
 ### Tài khoản đăng nhập khi kiểm thử
 
-Các tài khoản dưới đây được tạo bởi migration V5 trên database phát triển mới.
-Đăng nhập bằng username hoặc email; tất cả dùng chung mật khẩu
-`your_local_password`.
+V5 tạo năm tài khoản đầu tiên; V6 bổ sung tài khoản quản trị. Đăng nhập bằng
+username hoặc email; tất cả dùng chung mật khẩu `your_local_password`.
 
 | Username | Vai trò | Gợi ý kiểm thử |
 |---|---|---|
@@ -571,9 +574,11 @@ Các tài khoản dưới đây được tạo bởi migration V5 trên database
 | `demo.sales` | Nhân viên bán hàng (`SALES`) | Kiểm tra tài khoản nhân viên chỉ có quyền đọc catalog. |
 | `demo.customer` | Khách hàng (`CUSTOMER`) | Thử tài khoản mua hàng có dữ liệu đơn hàng và hồ sơ demo. |
 | `demo.browser` | Khách hàng (`CUSTOMER`) | Thử luồng khách hàng xem cửa hàng. |
+| `demo.admin` | Quản trị hệ thống (`SYSTEM_ADMIN`) | Có toàn bộ permission đang active tại thời điểm V6 chạy; dùng để kiểm tra các màn hình quản trị. |
 
-Không dùng các tài khoản demo này trên production. Database phải chạy Flyway
-V5 thành công thì các tài khoản mới đăng nhập được.
+Tất cả sáu tài khoản dùng mật khẩu `your_local_password`. Không dùng các tài
+khoản demo này trên production. Database phải chạy Flyway V6 thành công thì
+tài khoản quản trị mới đăng nhập được; năm tài khoản còn lại được tạo ở V5.
 
 ### Đường dẫn màn hình để xem dự án
 
