@@ -557,6 +557,84 @@ khóa, xóa mềm hoặc chỉ dùng Google không thể đăng nhập bằng m�
 `demo.sales` chỉ có `catalog.read`; `demo.customer` không vào được `/management`.
 Test tích hợp tài khoản demo chỉ chạy khi đặt `AURA_RUN_DEMO_LOGIN_IT=true` và
 `AURA_DB_PASSWORD` cho database phát triển đã seed V5.
+
+### Tài khoản đăng nhập khi kiểm thử
+
+Các tài khoản dưới đây được tạo bởi migration V5 trên database phát triển mới.
+Đăng nhập bằng username hoặc email; tất cả dùng chung mật khẩu
+`your_local_password`.
+
+| Username | Vai trò | Gợi ý kiểm thử |
+|---|---|---|
+| `demo.warehouse.creator` | Nhân viên kho (`WAREHOUSE`) | Xem quyền truy cập màn hình quản lý catalog và quy trình lập phiếu kho. |
+| `demo.warehouse.approver` | Nhân viên kho (`WAREHOUSE`) | Kiểm tra luồng nhân viên kho duyệt phiếu. |
+| `demo.sales` | Nhân viên bán hàng (`SALES`) | Kiểm tra tài khoản nhân viên chỉ có quyền đọc catalog. |
+| `demo.customer` | Khách hàng (`CUSTOMER`) | Thử tài khoản mua hàng có dữ liệu đơn hàng và hồ sơ demo. |
+| `demo.browser` | Khách hàng (`CUSTOMER`) | Thử luồng khách hàng xem cửa hàng. |
+
+Không dùng các tài khoản demo này trên production. Database phải chạy Flyway
+V5 thành công thì các tài khoản mới đăng nhập được.
+
+### Đường dẫn màn hình để xem dự án
+
+Các liên kết dưới đây giả định ứng dụng đang chạy tại `http://localhost:8080`.
+Các trang quản lý yêu cầu đăng nhập và quyền phù hợp. Những đường dẫn có `{...}`
+cần thay phần trong ngoặc bằng ID thực tế lấy từ dữ liệu của database.
+
+**Cửa hàng và tài khoản khách hàng**
+
+| Màn hình | Đường dẫn |
+|---|---|
+| Trang chủ | [http://localhost:8080/](http://localhost:8080/) |
+| Danh sách sản phẩm | [http://localhost:8080/products](http://localhost:8080/products) |
+| Chi tiết sản phẩm | `http://localhost:8080/products/{productId}` |
+| Giỏ hàng | [http://localhost:8080/cart](http://localhost:8080/cart) |
+| Thanh toán | [http://localhost:8080/checkout](http://localhost:8080/checkout) |
+| Danh sách yêu thích | [http://localhost:8080/wishlist](http://localhost:8080/wishlist) |
+| Hồ sơ khách hàng | [http://localhost:8080/account/profile](http://localhost:8080/account/profile) |
+| Địa chỉ giao hàng | [http://localhost:8080/account/addresses](http://localhost:8080/account/addresses) |
+| Đơn hàng của tôi | [http://localhost:8080/account/orders](http://localhost:8080/account/orders) |
+| Chi tiết đơn hàng | `http://localhost:8080/account/orders/{orderId}` |
+
+**Đăng nhập và tài khoản**
+
+| Màn hình | Đường dẫn |
+|---|---|
+| Đăng nhập | [http://localhost:8080/login](http://localhost:8080/login) |
+| Đăng ký | [http://localhost:8080/register](http://localhost:8080/register) |
+| Quên mật khẩu | [http://localhost:8080/forgot-password](http://localhost:8080/forgot-password) |
+
+**Quản lý**
+
+| Màn hình | Đường dẫn |
+|---|---|
+| Bảng điều khiển | [http://localhost:8080/management](http://localhost:8080/management) |
+| Danh sách sản phẩm | [http://localhost:8080/management/products](http://localhost:8080/management/products) |
+| Tạo sản phẩm | [http://localhost:8080/management/products/new](http://localhost:8080/management/products/new) |
+| Chi tiết sản phẩm quản lý | `http://localhost:8080/management/products/{id}` |
+| Sửa sản phẩm | `http://localhost:8080/management/products/{id}/edit` |
+| Danh mục | [http://localhost:8080/management/categories](http://localhost:8080/management/categories) |
+| Sửa danh mục | `http://localhost:8080/management/categories/{id}/edit` |
+| Thương hiệu | [http://localhost:8080/management/brands](http://localhost:8080/management/brands) |
+| Sửa thương hiệu | `http://localhost:8080/management/brands/{id}/edit` |
+| Tồn kho | [http://localhost:8080/management/inventory](http://localhost:8080/management/inventory) |
+| Chứng từ kho | [http://localhost:8080/management/inventory/documents](http://localhost:8080/management/inventory/documents) |
+| Nhà cung cấp | [http://localhost:8080/management/suppliers](http://localhost:8080/management/suppliers) |
+| Chi tiết/sửa nhà cung cấp | `http://localhost:8080/management/suppliers/{id}` hoặc `http://localhost:8080/management/suppliers/{id}/edit` |
+| Đơn mua hàng | [http://localhost:8080/management/purchase-orders](http://localhost:8080/management/purchase-orders) |
+| Chi tiết đơn mua hàng | `http://localhost:8080/management/purchase-orders/{purchaseOrderId}` |
+| Đơn bán hàng | [http://localhost:8080/management/orders](http://localhost:8080/management/orders) |
+| Chi tiết đơn bán hàng | `http://localhost:8080/management/orders/{orderId}` |
+| Thanh toán | [http://localhost:8080/management/payments](http://localhost:8080/management/payments) |
+| Hậu mãi | [http://localhost:8080/management/after-sales](http://localhost:8080/management/after-sales) |
+| Chi tiết yêu cầu hậu mãi | `http://localhost:8080/management/after-sales/{requestId}` |
+| Khách hàng | [http://localhost:8080/management/customers](http://localhost:8080/management/customers) |
+| Nhân viên | [http://localhost:8080/management/staff](http://localhost:8080/management/staff) |
+| Vai trò và quyền | [http://localhost:8080/management/roles](http://localhost:8080/management/roles) |
+| Voucher | [http://localhost:8080/management/vouchers](http://localhost:8080/management/vouchers) |
+| Phương thức vận chuyển | [http://localhost:8080/management/shipping-methods](http://localhost:8080/management/shipping-methods) |
+| Báo cáo | [http://localhost:8080/management/reports](http://localhost:8080/management/reports) |
+
 Script tạo hành trình nhập 100 đôi AURA Sprint và 60 đôi Nova Core, bán 2 đôi
 Sprint, nhận trả 1 đôi, hoàn tiền một phần, kiểm kê giảm 1 đôi Nova Core, cùng
 đơn hàng COD, lịch sử trạng thái, đánh giá, giỏ hàng, yêu thích và audit log.
