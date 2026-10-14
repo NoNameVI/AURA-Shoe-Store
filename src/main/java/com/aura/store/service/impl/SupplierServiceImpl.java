@@ -9,6 +9,7 @@ import com.aura.store.exception.ResourceNotFoundException;
 import com.aura.store.mapper.SupplierMapper;
 import com.aura.store.repository.SupplierRepository;
 import com.aura.store.service.SupplierService;
+import com.aura.store.validation.SearchInput;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
@@ -32,9 +33,9 @@ public class SupplierServiceImpl implements SupplierService {
     /** Tìm kiếm có phân trang; từ khóa rỗng trả toàn bộ nhà cung cấp. */
     @Override
     public PageResponse<SupplierResponse> search(String keyword, int page) {
-        String normalizedKeyword = keyword == null ? "" : keyword.trim();
+        String normalizedKeyword = SearchInput.keyword(keyword);
         Page<SupplierResponse> result = supplierRepository.search(normalizedKeyword,
-                        PageRequest.of(Math.max(0, page), 12,
+                        PageRequest.of(SearchInput.page(page), 12,
                                 Sort.by("supplierName").ascending().and(Sort.by("id").ascending())))
                 .map(supplierMapper::toResponse);
         return new PageResponse<>(result.getContent(), result.getNumber(), result.getSize(),

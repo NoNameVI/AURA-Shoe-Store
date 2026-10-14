@@ -8,6 +8,7 @@ import com.aura.store.dto.response.ProductResponse;
 import com.aura.store.dto.response.ProductVariantResponse;
 import com.aura.store.entity.Brand;
 import com.aura.store.entity.Category;
+import com.aura.store.entity.Color;
 import com.aura.store.entity.Product;
 import com.aura.store.entity.ProductImage;
 import com.aura.store.entity.ProductVariant;
@@ -17,14 +18,18 @@ import com.aura.store.exception.ResourceNotFoundException;
 import com.aura.store.mapper.ProductMapper;
 import com.aura.store.repository.BrandRepository;
 import com.aura.store.repository.CategoryRepository;
+import com.aura.store.repository.ColorRepository;
 import com.aura.store.repository.ProductImageRepository;
 import com.aura.store.repository.ProductRepository;
 import com.aura.store.repository.ProductVariantRepository;
 import com.aura.store.service.ProductService;
+import com.aura.store.validation.SearchInput;
 import java.text.Normalizer;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Locale;
+import java.util.Set;
+import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -45,6 +50,7 @@ public class ProductServiceImpl implements ProductService {
     private final ProductImageRepository imageRepository;
     private final BrandRepository brandRepository;
     private final CategoryRepository categoryRepository;
+    private final ColorRepository colorRepository;
     private final ProductMapper productMapper;
 
     /** Tim san pham trong quan tri va bo sung du lieu gia, anh, bien the. */
@@ -117,7 +123,7 @@ public class ProductServiceImpl implements ProductService {
             if (!product.getBrand().isActive() || !product.getCategory().isActive()) {
                 throw new BusinessException("Thương hiệu và danh mục phải đang hoạt động.");
             }
-            if (imageRepository.findByProduct_IdOrderByDisplayOrderAscIdAsc(id).isEmpty()) {
+            if (imageRepository.findByVariant_Product_IdOrderByVariant_IdAscDisplayOrderAscIdAsc(id).isEmpty()) {
                 throw new BusinessException("Sản phẩm cần có ảnh trước khi công bố.");
             }
             boolean sellable = variantRepository.findByProduct_IdOrderByIdAsc(id).stream()
@@ -131,57 +137,58 @@ public class ProductServiceImpl implements ProductService {
         return toResponse(productRepository.save(product));
     }
 
-    /** Tao SKU tu ID san pham, mau va size; khong cho sua ton kho trong luong catalog. */
+    /** Tao SKU tu ID san pham, mau va size; khong cho sua ton kho va gia von trong luong catalog. */
     @Override
     @Transactional
     public ProductResponse addVariant(Integer productId, ProductVariantRequest request) {
         Product product = findProduct(productId);
-        String color = request.getColorName().trim();
+        Color selectedColor = findActiveColor(request.getColorId());
         String size = request.getSizeCode().trim();
-        checkVariantDimensions(productId, color, size, null);
-        String sku = skuFor(productId, color, size);
+        checkVariantDimensions(productId, selectedColor.getId(), size, null);
+        String sku = skuFor(productId, selectedColor.getColorCode(), size);
         if (variantRepository.existsBySkuIgnoreCase(sku)) {
             throw new BusinessException("SKU được sinh đã tồn tại; hãy chọn màu/size khác.");
         }
         ProductVariant variant = new ProductVariant();
         variant.setProduct(product);
-        applyVariantRequest(variant, request, sku);
+        applyVariantRequest(variant, request, selectedColor, sku);
         variantRepository.save(variant);
         return toResponse(product);
     }
 
-    /** Cap nhat bien the dung san pham, giu nguyen ton va luong hang dang giu. */
+    /** Cap nhat bien the dung san pham, giu nguyen ton, hang dang giu va gia von. */
     @Override
     @Transactional
     public ProductResponse updateVariant(Integer productId, Integer variantId, ProductVariantRequest request) {
         Product product = findProduct(productId);
         ProductVariant variant = findVariant(productId, variantId);
-        String color = request.getColorName().trim();
+        Color selectedColor = findActiveColor(request.getColorId());
         String size = request.getSizeCode().trim();
-        checkVariantDimensions(productId, color, size, variant);
-        String sku = skuFor(productId, color, size);
+        checkVariantDimensions(productId, selectedColor.getId(), size, variant);
+        String sku = skuFor(productId, selectedColor.getColorCode(), size);
         if (!variant.getSku().equalsIgnoreCase(sku) && variantRepository.existsBySkuIgnoreCase(sku)) {
             throw new BusinessException("SKU được sinh đã tồn tại; hãy chọn màu/size khác.");
         }
         if (!request.isActive() && variant.getReservedQuantity() > 0) {
             throw new BusinessException("Không thể tắt biến thể đang có hàng được giữ trong giỏ.");
         }
-        applyVariantRequest(variant, request, sku);
+        applyVariantRequest(variant, request, selectedColor, sku);
         variantRepository.save(variant);
         return toResponse(product);
     }
 
-    /** Them anh va dam bao chi mot anh dai dien cho moi san pham. */
+    /** Them anh cho bien the, moi bien the chi co mot anh dai dien. */
     @Override
     @Transactional
     public ProductResponse addImage(Integer productId, ProductImageRequest request) {
         Product product = findProduct(productId);
-        boolean primary = request.isPrimary() || !imageRepository.existsByProduct_IdAndPrimaryTrue(productId);
+        ProductVariant variant = findVariant(productId, request.getVariantId());
+        boolean primary = request.isPrimary() || !imageRepository.existsByVariant_IdAndPrimaryTrue(variant.getId());
         if (primary) {
-            clearPrimaryImages(productId);
+            clearPrimaryImages(variant.getId());
         }
         ProductImage image = new ProductImage();
-        image.setProduct(product);
+        image.setVariant(variant);
         image.setImageUrl(request.getImageUrl().trim());
         image.setAltText(request.getAltText() == null ? "" : request.getAltText().trim());
         image.setDisplayOrder(request.getDisplayOrder());
@@ -196,8 +203,11 @@ public class ProductServiceImpl implements ProductService {
     public ProductResponse updateImage(Integer productId, Integer imageId, ProductImageRequest request) {
         Product product = findProduct(productId);
         ProductImage image = findImage(productId, imageId);
+        if (!image.getVariant().getId().equals(request.getVariantId())) {
+            throw new BusinessException("Không thể chuyển ảnh sang biến thể khác; hãy thêm ảnh mới.");
+        }
         if (request.isPrimary() && !image.isPrimary()) {
-            clearPrimaryImages(productId);
+            clearPrimaryImages(image.getVariant().getId());
             image.setPrimary(true);
         }
         // Bo checkbox tren anh dai dien khong duoc de san pham khong co anh dai dien.
@@ -215,14 +225,15 @@ public class ProductServiceImpl implements ProductService {
         Product product = findProduct(productId);
         ProductImage image = findImage(productId, imageId);
         if (product.getPublicationStatus() == PublicationStatus.ACTIVE
-                && imageRepository.findByProduct_IdOrderByDisplayOrderAscIdAsc(productId).size() == 1) {
+                && imageRepository.findByVariant_Product_IdOrderByVariant_IdAscDisplayOrderAscIdAsc(productId).size() == 1) {
             throw new BusinessException("Không thể xóa ảnh cuối của sản phẩm đang công bố.");
         }
+        Integer variantId = image.getVariant().getId();
         boolean wasPrimary = image.isPrimary();
         imageRepository.delete(image);
         imageRepository.flush();
         if (wasPrimary) {
-            List<ProductImage> remaining = imageRepository.findByProduct_IdOrderByDisplayOrderAscIdAsc(productId);
+            List<ProductImage> remaining = imageRepository.findByVariant_IdOrderByDisplayOrderAscIdAsc(variantId);
             if (!remaining.isEmpty()) {
                 remaining.getFirst().setPrimary(true);
                 imageRepository.save(remaining.getFirst());
@@ -244,10 +255,20 @@ public class ProductServiceImpl implements ProductService {
                 .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy biến thể sản phẩm."));
     }
 
+    /** Chi cho phep chon mau dang hoat dong trong danh muc. */
+    private Color findActiveColor(Integer id) {
+        Color color = colorRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy màu."));
+        if (!color.isActive()) {
+            throw new BusinessException("Màu đã ngừng hoạt động.");
+        }
+        return color;
+    }
+
     /** Kiem tra anh thuoc dung san pham truoc khi sua hoac xoa. */
     private ProductImage findImage(Integer productId, Integer imageId) {
         return imageRepository.findById(imageId)
-                .filter(image -> image.getProduct().getId().equals(productId))
+                .filter(image -> image.getVariant().getProduct().getId().equals(productId))
                 .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy ảnh sản phẩm."));
     }
 
@@ -273,8 +294,9 @@ public class ProductServiceImpl implements ProductService {
 
     /** Kiem tra slug va style code, bo qua gia tri cua chinh san pham khi sua. */
     private void checkUnique(ProductRequest request, Product current) {
-        if ((current == null || !current.getSlug().equalsIgnoreCase(request.getSlug()))
-                && productRepository.existsBySlugIgnoreCase(request.getSlug())) {
+        String slug = request.getSlug().trim();
+        if ((current == null || !current.getSlug().equalsIgnoreCase(slug))
+                && productRepository.existsBySlugIgnoreCase(slug)) {
             throw new BusinessException("Slug sản phẩm đã tồn tại.");
         }
         String style = request.getStyleCode() == null ? "" : request.getStyleCode().trim();
@@ -286,13 +308,13 @@ public class ProductServiceImpl implements ProductService {
     }
 
     /** Bien the chi duoc co mot to hop mau va size trong mot san pham. */
-    private void checkVariantDimensions(Integer productId, String color, String size, ProductVariant current) {
-        if (current != null && current.getColorName().equalsIgnoreCase(color)
+    private void checkVariantDimensions(Integer productId, Integer colorId, String size, ProductVariant current) {
+        if (current != null && current.getColor().getId().equals(colorId)
                 && current.getSizeCode().equalsIgnoreCase(size)) {
             return;
         }
-        if (variantRepository.existsByProduct_IdAndColorNameIgnoreCaseAndSizeCodeIgnoreCase(
-                productId, color, size)) {
+        if (variantRepository.existsByProduct_IdAndColor_IdAndSizeCodeIgnoreCase(
+                productId, colorId, size)) {
             throw new BusinessException("Tổ hợp màu và kích cỡ đã tồn tại.");
         }
     }
@@ -318,20 +340,19 @@ public class ProductServiceImpl implements ProductService {
         return token;
     }
 
-    /** Ghi cac truong catalog cua bien the, khong sua so luong ton. */
-    private void applyVariantRequest(ProductVariant variant, ProductVariantRequest request, String sku) {
+    /** Ghi cac truong catalog cua bien the, khong sua so luong ton va gia von. */
+    private void applyVariantRequest(ProductVariant variant, ProductVariantRequest request, Color color, String sku) {
         variant.setSku(sku);
-        variant.setColorName(request.getColorName().trim());
+        variant.setColor(color);
         variant.setSizeCode(request.getSizeCode().trim());
         variant.setSalePrice(request.getSalePrice());
-        variant.setCostPrice(request.getCostPrice());
         variant.setLowStockThreshold(request.getLowStockThreshold());
         variant.setActive(request.isActive());
     }
 
     /** Go bo anh dai dien cu truoc khi ghi anh moi de tranh UNIQUE conflict. */
-    private void clearPrimaryImages(Integer productId) {
-        List<ProductImage> images = imageRepository.findByProduct_IdOrderByDisplayOrderAscIdAsc(productId);
+    private void clearPrimaryImages(Integer variantId) {
+        List<ProductImage> images = imageRepository.findByVariant_IdOrderByDisplayOrderAscIdAsc(variantId);
         for (ProductImage image : images) {
             if (image.isPrimary()) {
                 image.setPrimary(false);
@@ -345,7 +366,7 @@ public class ProductServiceImpl implements ProductService {
         ProductResponse response = productMapper.toResponse(product);
         List<ProductVariantResponse> variants = variantRepository.findByProduct_IdOrderByIdAsc(product.getId())
                 .stream().map(productMapper::toVariantResponse).toList();
-        List<ProductImageResponse> images = imageRepository.findByProduct_IdOrderByDisplayOrderAscIdAsc(
+        List<ProductImageResponse> images = imageRepository.findByVariant_Product_IdOrderByVariant_IdAscDisplayOrderAscIdAsc(
                 product.getId()).stream().map(productMapper::toImageResponse).toList();
         response.setVariants(variants);
         response.setImages(images);
@@ -367,6 +388,8 @@ public class ProductServiceImpl implements ProductService {
                     ProductVariantResponse publicVariant = new ProductVariantResponse();
                     publicVariant.setId(variant.getId());
                     publicVariant.setSku(variant.getSku());
+                    publicVariant.setColorId(variant.getColorId());
+                    publicVariant.setColorCode(variant.getColorCode());
                     publicVariant.setColorName(variant.getColorName());
                     publicVariant.setSizeCode(variant.getSizeCode());
                     publicVariant.setSalePrice(variant.getSalePrice());
@@ -375,6 +398,13 @@ public class ProductServiceImpl implements ProductService {
                     return publicVariant;
                 }).toList();
         response.setVariants(publicVariants);
+        Set<Integer> visibleVariantIds = publicVariants.stream()
+                .map(ProductVariantResponse::getId).collect(Collectors.toSet());
+        List<ProductImageResponse> publicImages = response.getImages().stream()
+                .filter(image -> visibleVariantIds.contains(image.getVariantId())).toList();
+        response.setImages(publicImages);
+        response.setPrimaryImageUrl(publicImages.stream().filter(ProductImageResponse::isPrimary)
+                .map(ProductImageResponse::getImageUrl).findFirst().orElse(null));
         return response;
     }
 
@@ -393,12 +423,12 @@ public class ProductServiceImpl implements ProductService {
 
     /** Chuan hoa tu khoa tim kiem, tranh NULL trong JPQL. */
     private String cleanKeyword(String keyword) {
-        return keyword == null ? "" : keyword.trim();
+        return SearchInput.keyword(keyword);
     }
 
     /** Khong cho page am va gioi han moi trang 12 san pham. */
     private PageRequest pageRequest(int page) {
-        return PageRequest.of(Math.max(0, page), 12, Sort.by("id").descending());
+        return PageRequest.of(SearchInput.page(page), 12, Sort.by("id").descending());
     }
 }
 

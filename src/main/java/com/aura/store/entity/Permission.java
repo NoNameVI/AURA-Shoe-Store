@@ -17,7 +17,7 @@ import lombok.Setter;
 @Setter
 @NoArgsConstructor
 @Entity
-@Table(name = "permissions")
+@Table(name = "permission")
 public class Permission extends TimestampedEntity {
 
     @Id

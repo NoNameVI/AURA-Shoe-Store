@@ -5,6 +5,7 @@ import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Size;
 import lombok.Getter;
 import lombok.Setter;
+import com.aura.store.validation.annotation.ValidImageUrl;
 
 /**
  * Input contract for the Brand use case.
@@ -27,7 +28,7 @@ public class BrandRequest {
     private String description;
 
     @Size(max = 500)
-    @Pattern(regexp = "^$|https?://.+|/images/.+", message = "Logo phai la URL HTTP(S) hoac duong dan /images/")
+    @ValidImageUrl(message = "Logo phai la URL HTTP(S) hop le hoac duong dan /images/")
     private String logoUrl;
 
     private boolean active = true;

@@ -4,6 +4,7 @@ import com.aura.store.entity.Account;
 import com.aura.store.enums.AccountStatus;
 import com.aura.store.enums.AccountType;
 import com.aura.store.repository.AccountRepository;
+import com.aura.store.repository.CustomerRepository;
 import com.aura.store.repository.RolePermissionRepository;
 import com.aura.store.repository.StaffRepository;
 import com.aura.store.service.impl.AuthenticationServiceImpl;
@@ -29,6 +30,8 @@ import static org.mockito.Mockito.when;
 class AuthenticationServiceTest {
     @Mock
     private AccountRepository accountRepository;
+    @Mock
+    private CustomerRepository customerRepository;
     @Mock
     private StaffRepository staffRepository;
     @Mock
@@ -59,6 +62,7 @@ class AuthenticationServiceTest {
     void customerHasNoCatalogPermission() {
         when(accountRepository.findByLoginIdentity("demo.customer"))
                 .thenReturn(List.of(account(AccountType.CUSTOMER)));
+        when(customerRepository.existsById(1)).thenReturn(true);
 
         UserDetails user = authenticationService.loadUserByUsername("demo.customer");
 
@@ -72,6 +76,7 @@ class AuthenticationServiceTest {
         Account inactive = account(AccountType.CUSTOMER);
         inactive.setAccountStatus(AccountStatus.INACTIVE);
         when(accountRepository.findByLoginIdentity("inactive")).thenReturn(List.of(inactive));
+        when(customerRepository.existsById(1)).thenReturn(true);
         assertFalse(authenticationService.loadUserByUsername("inactive").isEnabled());
 
         Account locked = account(AccountType.CUSTOMER);
@@ -104,7 +109,6 @@ class AuthenticationServiceTest {
         account.setEmail("warehouse.creator@example.test");
         account.setPasswordHash("$2a$12$demo-hash");
         account.setAccountStatus(AccountStatus.ACTIVE);
-        account.setAccountType(type);
         return account;
     }
 }

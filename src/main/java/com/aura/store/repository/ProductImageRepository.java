@@ -10,9 +10,12 @@ import java.util.List;
  */
 public interface ProductImageRepository extends JpaRepository<ProductImage, Integer> {
     /** Lay anh theo thu tu hien thi, sau do theo ID. */
-    List<ProductImage> findByProduct_IdOrderByDisplayOrderAscIdAsc(Integer productId);
+    List<ProductImage> findByVariant_Product_IdOrderByVariant_IdAscDisplayOrderAscIdAsc(Integer productId);
+
+    /** Lay anh cua mot bien the de bao dam moi bien the chi co mot anh chinh. */
+    List<ProductImage> findByVariant_IdOrderByDisplayOrderAscIdAsc(Integer variantId);
 
     /** Kiem tra san pham da co anh dai dien hay chua. */
-    boolean existsByProduct_IdAndPrimaryTrue(Integer productId);
+    boolean existsByVariant_IdAndPrimaryTrue(Integer variantId);
 }
 

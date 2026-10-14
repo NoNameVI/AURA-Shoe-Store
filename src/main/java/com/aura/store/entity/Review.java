@@ -19,7 +19,7 @@ import lombok.Setter;
 @Setter
 @NoArgsConstructor
 @Entity
-@Table(name = "reviews")
+@Table(name = "review")
 public class Review extends CreatedAtEntity {
 
     @Id

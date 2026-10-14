@@ -17,7 +17,7 @@ import lombok.Setter;
 @Setter
 @NoArgsConstructor
 @Entity
-@Table(name = "staffs")
+@Table(name = "staff")
 public class Staff extends TimestampedEntity {
 
     @Id

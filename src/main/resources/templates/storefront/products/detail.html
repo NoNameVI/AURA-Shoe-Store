@@ -20,7 +20,7 @@
             <div class="shop-thumbnails" th:if="${!product.images.empty}" aria-label="Ảnh sản phẩm">
                 <button type="button" th:each="image, stat : ${product.images}"
                         th:classappend="${stat.first} ? ' is-active' : ''"
-                        th:attr="data-image-src=${image.imageUrl},data-image-alt=${image.altText},data-image-index=${stat.count}"
+                        th:attr="data-image-src=${image.imageUrl},data-image-alt=${image.altText},data-image-index=${stat.count},data-variant-id=${image.variantId},data-image-primary=${image.primary}"
                         th:aria-label="|Xem ảnh ${stat.count}|">
                     <img th:src="${image.imageUrl}" th:alt="${image.altText}">
                 </button>
@@ -39,7 +39,7 @@
                 <div class="shop-size-matrix" th:if="${!product.variants.empty}">
                     <button type="button" class="shop-size-option" th:each="variant : ${product.variants}"
                             th:if="${variant.active}" th:disabled="${variant.availableQuantity <= 0}"
-                            th:attr="data-variant-price=${#numbers.formatDecimal(variant.salePrice, 1, 'POINT', 0, 'COMMA')},data-variant-sku=${variant.sku},data-variant-stock=${variant.availableQuantity}"
+                            th:attr="data-variant-price=${#numbers.formatDecimal(variant.salePrice, 1, 'POINT', 0, 'COMMA')},data-variant-sku=${variant.sku},data-variant-stock=${variant.availableQuantity},data-variant-id=${variant.id}"
                             aria-pressed="false">
                         <strong th:text="${variant.sizeCode}">40</strong>
                         <span th:text="${variant.colorName}">Màu</span>

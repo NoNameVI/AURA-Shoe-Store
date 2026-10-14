@@ -2,8 +2,8 @@ package com.aura.store.service.impl;
 
 import com.aura.store.entity.Account;
 import com.aura.store.enums.AccountStatus;
-import com.aura.store.enums.AccountType;
 import com.aura.store.repository.AccountRepository;
+import com.aura.store.repository.CustomerRepository;
 import com.aura.store.repository.RolePermissionRepository;
 import com.aura.store.repository.StaffRepository;
 import com.aura.store.service.AuthenticationService;
@@ -29,6 +29,7 @@ import org.springframework.transaction.annotation.Transactional;
 @RequiredArgsConstructor
 public class AuthenticationServiceImpl implements AuthenticationService, UserDetailsService {
     private final AccountRepository accountRepository;
+    private final CustomerRepository customerRepository;
     private final StaffRepository staffRepository;
     private final RolePermissionRepository rolePermissionRepository;
 
@@ -49,7 +50,7 @@ public class AuthenticationServiceImpl implements AuthenticationService, UserDet
         Account account = matches.getFirst();
         if (account.getDeletedAt() != null || account.isGoogleAuth()
                 || account.getPasswordHash() == null || account.getPasswordHash().isBlank()
-                || account.getAccountStatus() == null || account.getAccountType() == null) {
+                || account.getAccountStatus() == null) {
             throw new UsernameNotFoundException("Tai khoan khong the dang nhap bang mat khau");
         }
 
@@ -67,7 +68,8 @@ public class AuthenticationServiceImpl implements AuthenticationService, UserDet
     /** Lay role va permission dang hoat dong cho nhan vien; khach hang chi co role CUSTOMER. */
     private List<GrantedAuthority> authoritiesFor(Account account) {
         List<GrantedAuthority> authorities = new ArrayList<>();
-        if (account.getAccountType() == AccountType.CUSTOMER) {
+        // The current schema derives account type from its exclusive customer/staff profile.
+        if (customerRepository.existsById(account.getId())) {
             authorities.add(new SimpleGrantedAuthority("ROLE_CUSTOMER"));
             return authorities;
         }

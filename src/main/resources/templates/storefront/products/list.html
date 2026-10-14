@@ -22,7 +22,7 @@
             <div class="shop-filter-heading"><h2>Bộ lọc</h2><span>01 — 03</span></div>
             <form class="shop-filter-form" th:action="@{/products}" method="get">
                 <label>TÌM KIẾM
-                    <input name="keyword" th:value="${keyword}" placeholder="Tên sản phẩm...">
+                    <input name="keyword" th:value="${keyword}" maxlength="100" placeholder="Tên sản phẩm...">
                 </label>
                 <label>THƯƠNG HIỆU
                     <select name="brandId"><option value="">Tất cả thương hiệu</option>

@@ -15,13 +15,13 @@
             <a th:href="@{/management/categories}">Danh mục</a>
             <a sec:authorize="hasAuthority('supplier.manage')"
                th:href="@{/management/suppliers}">Nhà cung cấp</a>
-            <a class="primary-button" sec:authorize="hasAuthority('catalog.manage')"
+            <a class="primary-button" sec:authorize="hasAuthority('catalog.manage') and hasAnyRole('SALES', 'SYSTEM_ADMIN')"
                th:href="@{/management/products/new}">Thêm sản phẩm</a></nav>
     </div>
     <p class="form-message" th:if="${success}" th:text="${success}"></p>
     <section class="page-card">
         <form class="catalog-filters" th:action="@{/management/products}" method="get">
-            <label>Từ khóa <input name="keyword" th:value="${keyword}" placeholder="Tên, slug, mã mẫu"></label>
+            <label>Từ khóa <input name="keyword" th:value="${keyword}" maxlength="100" placeholder="Tên, slug, mã mẫu"></label>
             <label>Thương hiệu <select name="brandId">
                 <option value="">Tất cả</option>
                 <option th:each="brand : ${brands}" th:value="${brand.id}" th:text="${brand.brandName}"
@@ -54,7 +54,7 @@
                 <td th:text="${product.lowestPrice != null ? product.lowestPrice + ' ₫' : 'Chưa có biến thể'}">Giá</td>
                 <td th:text="${product.publicationStatus}">DRAFT</td>
                 <td class="actions"><a th:href="@{/management/products/{id}(id=${product.id})}">Chi tiết</a>
-                    <a sec:authorize="hasAuthority('catalog.manage')"
+                    <a sec:authorize="hasAuthority('catalog.manage') and hasAnyRole('SALES', 'SYSTEM_ADMIN')"
                        th:href="@{/management/products/{id}/edit(id=${product.id})}">Sửa</a></td>
             </tr>
             <tr th:if="${products.empty}"><td colspan="6">Không có sản phẩm phù hợp.</td></tr>

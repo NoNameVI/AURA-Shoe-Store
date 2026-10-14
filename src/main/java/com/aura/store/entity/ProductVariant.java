@@ -23,7 +23,7 @@ import lombok.Setter;
 @Setter
 @NoArgsConstructor
 @Entity
-@Table(name = "product_variants")
+@Table(name = "product_variant")
 public class ProductVariant extends TimestampedEntity {
 
     @Id
@@ -35,11 +35,13 @@ public class ProductVariant extends TimestampedEntity {
     @JoinColumn(name = "product_id", nullable = false)
     private Product product;
 
+    /** Mau duoc quan ly trong danh muc chung; snapshot lich su nam o bang giao dich. */
+    @ManyToOne(fetch = FetchType.LAZY, optional = false)
+    @JoinColumn(name = "color_id", nullable = false)
+    private Color color;
+
     @Column(name = "sku", nullable = false, length = 100)
     private String sku;
-
-    @Column(name = "color_name", nullable = false, length = 100)
-    private String colorName;
 
     @Column(name = "size_code", nullable = false, length = 10)
     private String sizeCode;

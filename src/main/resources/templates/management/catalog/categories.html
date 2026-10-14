@@ -12,7 +12,7 @@
         <div><p class="eyebrow">Quản lý danh mục</p><h1>Danh mục sản phẩm</h1>
             <p>Quản lý cây danh mục và quan hệ danh mục cha.</p></div>
         <nav class="catalog-links"><a th:href="@{/management/brands}">Thương hiệu</a>
-            <a th:href="@{/management/products}">Sản phẩm</a></nav>
+            <a sec:authorize="hasAnyRole('SALES', 'SYSTEM_ADMIN')" th:href="@{/management/products}">Sản phẩm</a></nav>
     </div>
     <p class="form-message" th:if="${success}" th:text="${success}"></p>
     <p class="form-message error" th:if="${error}" th:text="${error}"></p>
@@ -21,7 +21,7 @@
             <h2>Danh sách danh mục</h2>
             <form class="catalog-search" th:action="@{/management/categories}" method="get">
                 <label for="categoryKeyword">Tên hoặc slug</label>
-                <input id="categoryKeyword" name="keyword" th:value="${keyword}" placeholder="Tìm danh mục">
+                <input id="categoryKeyword" name="keyword" th:value="${keyword}" maxlength="100" placeholder="Tìm danh mục">
                 <button class="primary-button" type="submit">Tìm kiếm</button>
             </form>
             <div class="table-scroll"><table class="data-table">
@@ -34,10 +34,10 @@
                     <td th:text="${category.parentName ?: '—'}">Danh mục cha</td>
                     <td th:text="${category.active ? 'Hoạt động' : 'Đã tắt'}">Trạng thái</td>
                     <td class="actions">
-                        <a sec:authorize="hasAuthority('catalog.manage')"
+                        <a sec:authorize="hasAuthority('catalog.manage') and hasAnyRole('SALES', 'SYSTEM_ADMIN')"
                            th:href="@{/management/categories/{id}/edit(id=${category.id})}">Sửa</a>
                         <form th:action="@{/management/categories/{id}/delete(id=${category.id})}"
-                              sec:authorize="hasAuthority('catalog.manage')"
+                              sec:authorize="hasAuthority('catalog.manage') and hasAnyRole('SALES', 'SYSTEM_ADMIN')"
                               method="post" onsubmit="return confirm('Xóa danh mục này?')">
                             <button class="text-button danger" type="submit">Xóa</button>
                         </form>
@@ -54,7 +54,7 @@
                    th:href="@{/management/categories(keyword=${keyword},page=${categories.number + 1})}">Trang sau</a>
             </nav>
         </section>
-        <section class="page-card" sec:authorize="hasAuthority('catalog.manage')">
+        <section class="page-card" sec:authorize="hasAuthority('catalog.manage') and hasAnyRole('SALES', 'SYSTEM_ADMIN')">
             <h2 th:text="${editId != null ? 'Chi tiết / sửa danh mục' : 'Thêm danh mục'}">Thêm danh mục</h2>
             <form class="catalog-form" th:object="${categoryForm}" method="post"
                   th:action="${editId != null} ? @{/management/categories/{id}(id=${editId})} : @{/management/categories}">
@@ -69,7 +69,9 @@
                                 th:value="${parent.id}" th:text="${parent.categoryName}"></option>
                     </select>
                 </label>
+                <small class="field-error" th:if="${#fields.hasErrors('parentId')}" th:errors="*{parentId}"></small>
                 <label>Mô tả <textarea th:field="*{description}" maxlength="1000" rows="4"></textarea></label>
+                <small class="field-error" th:if="${#fields.hasErrors('description')}" th:errors="*{description}"></small>
                 <label class="check-field"><input type="checkbox" th:field="*{active}"> Đang hoạt động</label>
                 <div class="actions">
                     <button class="primary-button" type="submit" th:text="${editId != null ? 'Lưu thay đổi' : 'Thêm danh mục'}"></button>

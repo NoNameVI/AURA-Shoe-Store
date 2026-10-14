@@ -51,11 +51,16 @@ public interface ProductMapper {
     void update(ProductRequest request, @MappingTarget Product product);
 
     /** Chuyen bien the sang DTO, tinh ton kha dung tu ton va luong giu. */
+    @Mapping(target = "colorId", source = "color.id")
+    @Mapping(target = "colorCode", source = "color.colorCode")
+    @Mapping(target = "colorName", source = "color.colorName")
     @Mapping(target = "availableQuantity",
             expression = "java(variant.getStockQuantity() - variant.getReservedQuantity())")
     ProductVariantResponse toVariantResponse(ProductVariant variant);
 
     /** Chuyen anh san pham sang DTO. */
+    @Mapping(target = "variantId", source = "variant.id")
+    @Mapping(target = "variantSku", source = "variant.sku")
     ProductImageResponse toImageResponse(ProductImage image);
 }
 

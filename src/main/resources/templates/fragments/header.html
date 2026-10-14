@@ -6,8 +6,12 @@
         <a class="brand" th:href="@{/}" aria-label="AURA Footwear - trang chủ">AURA<span>FOOTWEAR</span></a>
         <nav class="site-main-nav" aria-label="Điều hướng chính">
             <a th:href="@{/products}">Bộ sưu tập</a>
+            <a th:href="@{/categories}">Danh mục</a>
             <a th:href="@{/#story}">Câu chuyện AURA</a>
-            <a sec:authorize="hasAuthority('catalog.read')" th:href="@{/management/products}">Quản lý</a>
+            <a sec:authorize="hasAuthority('catalog.read') and hasAnyRole('SALES', 'SYSTEM_ADMIN')"
+               th:href="@{/management/products}">Quản lý</a>
+            <a sec:authorize="hasAuthority('catalog.read') and hasRole('WAREHOUSE')"
+               th:href="@{/management/categories}">Quản lý danh mục</a>
         </nav>
         <nav class="site-utility-nav" aria-label="Tài khoản và giỏ hàng">
             <a sec:authorize="isAnonymous()" th:href="@{/login}">Đăng nhập</a>

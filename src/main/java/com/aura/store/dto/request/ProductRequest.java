@@ -3,6 +3,7 @@ package com.aura.store.dto.request;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Pattern;
+import jakarta.validation.constraints.Positive;
 import jakarta.validation.constraints.Size;
 import lombok.Getter;
 import lombok.Setter;
@@ -31,9 +32,11 @@ public class ProductRequest {
     private String description;
 
     @NotNull(message = "Vui long chon thuong hieu")
+    @Positive(message = "Thuong hieu khong hop le")
     private Integer brandId;
 
     @NotNull(message = "Vui long chon danh muc")
+    @Positive(message = "Danh muc khong hop le")
     private Integer categoryId;
 }
 

@@ -5,6 +5,7 @@ import com.aura.store.entity.Account;
 import com.aura.store.enums.AccountStatus;
 import com.aura.store.enums.AccountType;
 import com.aura.store.repository.AccountRepository;
+import com.aura.store.repository.CustomerRepository;
 import com.aura.store.repository.RolePermissionRepository;
 import com.aura.store.repository.StaffRepository;
 import com.aura.store.security.SecurityConfig;
@@ -43,6 +44,8 @@ class LoginFlowTest {
     private MockMvc mockMvc;
     @MockitoBean
     private AccountRepository accountRepository;
+    @MockitoBean
+    private CustomerRepository customerRepository;
     @MockitoBean
     private StaffRepository staffRepository;
     @MockitoBean
@@ -95,11 +98,22 @@ class LoginFlowTest {
                 .andExpect(redirectedUrl("/login?error"));
     }
 
+    /** O dang nhap chi co khoang trang khong tao duoc phien. */
+    @Test
+    void blankLoginIdentityReturnsToLogin() throws Exception {
+        mockMvc.perform(post("/login").with(csrf())
+                        .param("username", "   ")
+                        .param("password", "your_local_password"))
+                .andExpect(status().is3xxRedirection())
+                .andExpect(redirectedUrl("/login?error"));
+    }
+
     /** Kiem tra khach hang dang nhap duoc nhung khong vao trang quan tri. */
     @Test
     void customerCannotOpenManagement() throws Exception {
         when(accountRepository.findByLoginIdentity("customer@example.test"))
                 .thenReturn(List.of(account(AccountType.CUSTOMER)));
+        when(customerRepository.existsById(1)).thenReturn(true);
         MvcResult result = mockMvc.perform(post("/login").with(csrf())
                         .param("username", "customer@example.test")
                         .param("password", "your_local_password"))
@@ -118,7 +132,6 @@ class LoginFlowTest {
         account.setEmail(type == AccountType.STAFF
                 ? "warehouse.creator@example.test" : "customer@example.test");
         account.setPasswordHash(DEMO_HASH);
-        account.setAccountType(type);
         account.setAccountStatus(AccountStatus.ACTIVE);
         return account;
     }

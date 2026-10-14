@@ -24,7 +24,7 @@ import org.hibernate.type.SqlTypes;
 @Setter
 @NoArgsConstructor
 @Entity
-@Table(name = "product_images")
+@Table(name = "product_image")
 public class ProductImage {
 
     @Id
@@ -33,8 +33,8 @@ public class ProductImage {
     private Integer id;
 
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
-    @JoinColumn(name = "product_id", nullable = false)
-    private Product product;
+    @JoinColumn(name = "variant_id", nullable = false)
+    private ProductVariant variant;
 
     @Column(name = "image_url", nullable = false, length = 500)
     private String imageUrl;

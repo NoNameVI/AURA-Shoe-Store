@@ -12,6 +12,8 @@ import lombok.Setter;
 @Setter
 public class ProductImageResponse {
     private Integer id;
+    private Integer variantId;
+    private String variantSku;
     private String imageUrl;
     private String altText;
     private int displayOrder;

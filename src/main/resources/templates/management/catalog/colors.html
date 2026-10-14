@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head>
+    <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Quản lý màu | AURA Store</title>
+    <link rel="stylesheet" th:href="@{/css/app.css}">
+</head>
+<body>
+<header th:replace="~{fragments/header :: siteHeader}"></header>
+<main class="page-shell catalog-page">
+    <div class="catalog-heading">
+        <div><p class="eyebrow">Quản lý danh mục</p><h1>Màu sắc</h1>
+            <p>Thêm và quản lý màu dùng cho biến thể sản phẩm.</p></div>
+        <nav class="catalog-links"><a th:href="@{/management/products}">Sản phẩm</a>
+            <a th:href="@{/management/brands}">Thương hiệu</a>
+            <a th:href="@{/management/categories}">Danh mục</a></nav>
+    </div>
+    <p class="form-message" th:if="${success}" th:text="${success}"></p>
+    <p class="form-message error" th:if="${error}" th:text="${error}"></p>
+    <div class="catalog-layout">
+        <section class="page-card">
+            <h2>Danh sách màu</h2>
+            <form class="catalog-search" th:action="@{/management/colors}" method="get">
+                <label for="colorKeyword">Tên màu</label>
+                <input id="colorKeyword" name="keyword" th:value="${keyword}" maxlength="100" placeholder="Tìm màu">
+                <button class="primary-button" type="submit">Tìm kiếm</button>
+            </form>
+            <div class="table-scroll"><table class="data-table">
+                <thead><tr><th>Màu</th><th>Mã danh mục</th><th>Mã HEX</th><th>Trạng thái</th><th>Thao tác</th></tr></thead>
+                <tbody>
+                <tr th:each="color : ${colors.content}">
+                    <td>
+                        <div class="color-table-item">
+                            <span class="color-swatch-sm"
+                                  th:style="|background-color: ${color.hexCode ?: '#f1f5f9'};|"
+                                  th:classappend="${color.hexCode == null || color.hexCode.isEmpty()} ? 'no-hex' : ''"
+                                  th:title="${color.hexCode ?: 'Chưa có mã màu'}"></span>
+                            <strong th:text="${color.colorName}">Tên màu</strong>
+                        </div>
+                    </td>
+                    <td th:text="${color.colorCode}">RED</td>
+                    <td>
+                        <code th:if="${color.hexCode != null && !color.hexCode.isEmpty()}" th:text="${color.hexCode}">#000000</code>
+                        <span th:unless="${color.hexCode != null && !color.hexCode.isEmpty()}">—</span>
+                    </td>
+                    <td th:text="${color.active ? 'Hoạt động' : 'Đã tắt'}">Trạng thái</td>
+                    <td class="actions">
+                        <a sec:authorize="hasAuthority('catalog.manage') and hasAnyRole('SALES', 'SYSTEM_ADMIN')"
+                           th:href="@{/management/colors/{id}/edit(id=${color.id})}">Sửa</a>
+                        <form sec:authorize="hasAuthority('catalog.manage') and hasAnyRole('SALES', 'SYSTEM_ADMIN')" method="post"
+                              th:action="@{/management/colors/{id}/delete(id=${color.id})}"
+                              onsubmit="return confirm('Xóa màu này?')">
+                            <button class="text-button danger" type="submit">Xóa</button>
+                        </form>
+                    </td>
+                </tr>
+                <tr th:if="${colors.empty}"><td colspan="5">Không tìm thấy màu.</td></tr>
+                </tbody>
+            </table></div>
+            <nav class="pagination" th:if="${colors.totalPages > 1}" aria-label="Phân trang">
+                <a th:if="${colors.hasPrevious()}"
+                   th:href="@{/management/colors(keyword=${keyword},page=${colors.number - 1})}">Trang trước</a>
+                <span th:text="|Trang ${colors.number + 1} / ${colors.totalPages}|"></span>
+                <a th:if="${colors.hasNext()}"
+                   th:href="@{/management/colors(keyword=${keyword},page=${colors.number + 1})}">Trang sau</a>
+            </nav>
+        </section>
+        <section class="page-card" sec:authorize="hasAuthority('catalog.manage') and hasAnyRole('SALES', 'SYSTEM_ADMIN')">
+            <h2 th:text="${editId != null ? 'Sửa màu' : 'Thêm màu'}">Thêm màu</h2>
+            <form class="catalog-form" th:object="${colorForm}" method="post"
+                  th:action="${editId != null} ? @{/management/colors/{id}(id=${editId})} : @{/management/colors}">
+                <label>Mã màu <input th:field="*{colorCode}" maxlength="12" pattern="[A-Za-z0-9]+(-[A-Za-z0-9]+)*" required></label>
+                <small class="field-error" th:if="${#fields.hasErrors('colorCode')}" th:errors="*{colorCode}"></small>
+                <label>Tên màu <input th:field="*{colorName}" maxlength="50" required></label>
+                <small class="field-error" th:if="${#fields.hasErrors('colorName')}" th:errors="*{colorName}"></small>
+                <label>Mã màu (không bắt buộc)
+                    <div class="color-picker-wrapper">
+                        <input type="color" id="colorPicker" class="color-picker-input"
+                               th:value="${colorForm.hexCode != null && !colorForm.hexCode.isEmpty() ? colorForm.hexCode : '#000000'}"
+                               title="Chọn màu từ bảng màu">
+                        <input id="hexCodeInput" th:field="*{hexCode}" maxlength="7" placeholder="#000000"
+                               pattern="^$|#[0-9A-Fa-f]{6}" autocomplete="off">
+                        <span class="color-preview-box" id="colorPickerPreview" title="Xem trước màu"></span>
+                    </div>
+                </label>
+                <div class="color-palette-presets" aria-label="Bảng màu chọn nhanh">
+                    <span class="helper-text">Gợi ý:</span>
+                    <button type="button" class="color-preset-btn" data-hex="#000000" style="background-color: #000000;" title="Đen (#000000)"></button>
+                    <button type="button" class="color-preset-btn" data-hex="#FFFFFF" style="background-color: #FFFFFF; border-color: #cbd5e1;" title="Trắng (#FFFFFF)"></button>
+                    <button type="button" class="color-preset-btn" data-hex="#6B7280" style="background-color: #6B7280;" title="Xám (#6B7280)"></button>
+                    <button type="button" class="color-preset-btn" data-hex="#EF4444" style="background-color: #EF4444;" title="Đỏ (#EF4444)"></button>
+                    <button type="button" class="color-preset-btn" data-hex="#3B82F6" style="background-color: #3B82F6;" title="Xanh dương (#3B82F6)"></button>
+                    <button type="button" class="color-preset-btn" data-hex="#10B981" style="background-color: #10B981;" title="Xanh lá (#10B981)"></button>
+                    <button type="button" class="color-preset-btn" data-hex="#F59E0B" style="background-color: #F59E0B;" title="Vàng cam (#F59E0B)"></button>
+                    <button type="button" class="color-preset-btn" data-hex="#854D0E" style="background-color: #854D0E;" title="Nâu (#854D0E)"></button>
+                    <button type="button" class="color-preset-btn" data-hex="#E5D3B3" style="background-color: #E5D3B3;" title="Be (#E5D3B3)"></button>
+                    <button type="button" class="color-preset-btn" data-hex="#1E293B" style="background-color: #1E293B;" title="Xanh navy (#1E293B)"></button>
+                </div>
+                <small class="field-error" th:if="${#fields.hasErrors('hexCode')}" th:errors="*{hexCode}"></small>
+                <label class="check-field"><input type="checkbox" th:field="*{active}"> Đang hoạt động</label>
+                <div class="actions">
+                    <button class="primary-button" type="submit" th:text="${editId != null ? 'Lưu thay đổi' : 'Thêm màu'}"></button>
+                    <a th:if="${editId != null}" th:href="@{/management/colors}">Hủy sửa</a>
+                </div>
+            </form>
+        </section>
+    </div>
+</main>
+<footer th:replace="~{fragments/footer :: siteFooter}"></footer>
+<script th:src="@{/js/app.js}"></script>
+</body>
+</html>

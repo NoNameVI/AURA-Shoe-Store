@@ -2,6 +2,7 @@ package com.aura.store.dto.request;
 
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Pattern;
+import jakarta.validation.constraints.Positive;
 import jakarta.validation.constraints.Size;
 import lombok.Getter;
 import lombok.Setter;
@@ -26,6 +27,7 @@ public class CategoryRequest {
     @Size(max = 1000)
     private String description;
 
+    @Positive(message = "Danh muc cha khong hop le")
     private Integer parentId;
 
     private boolean active = true;

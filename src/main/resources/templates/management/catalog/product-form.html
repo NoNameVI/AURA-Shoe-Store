@@ -18,20 +18,26 @@
               th:action="${editId != null} ? @{/management/products/{id}(id=${editId})} : @{/management/products}">
             <div class="form-grid">
                 <label>Tên sản phẩm <input th:field="*{productName}" maxlength="180" required></label>
+                <small class="field-error" th:if="${#fields.hasErrors('productName')}" th:errors="*{productName}"></small>
                 <label>Slug <input th:field="*{slug}" maxlength="200" pattern="[a-z0-9]+(-[a-z0-9]+)*" required></label>
+                <small class="field-error" th:if="${#fields.hasErrors('slug')}" th:errors="*{slug}"></small>
                 <label>Mã mẫu <input th:field="*{styleCode}" maxlength="100"></label>
+                <small class="field-error" th:if="${#fields.hasErrors('styleCode')}" th:errors="*{styleCode}"></small>
                 <label>Thương hiệu
                     <select th:field="*{brandId}" required><option value="">Chọn thương hiệu</option>
                         <option th:each="brand : ${brands}" th:value="${brand.id}" th:text="${brand.brandName}"></option>
                     </select>
                 </label>
+                <small class="field-error" th:if="${#fields.hasErrors('brandId')}" th:errors="*{brandId}"></small>
                 <label>Danh mục
                     <select th:field="*{categoryId}" required><option value="">Chọn danh mục</option>
                         <option th:each="category : ${categories}" th:value="${category.id}" th:text="${category.categoryName}"></option>
                     </select>
                 </label>
+                <small class="field-error" th:if="${#fields.hasErrors('categoryId')}" th:errors="*{categoryId}"></small>
             </div>
             <label>Mô tả <textarea th:field="*{description}" rows="6" maxlength="3000"></textarea></label>
+            <small class="field-error" th:if="${#fields.hasErrors('description')}" th:errors="*{description}"></small>
             <div class="validation-list" th:if="${#fields.hasErrors('*')}">
                 <p th:each="item : ${#fields.errors('*')}" th:text="${item}">Lỗi dữ liệu</p>
             </div>

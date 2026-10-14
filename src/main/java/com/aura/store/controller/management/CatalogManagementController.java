@@ -12,6 +12,7 @@ import com.aura.store.enums.PublicationStatus;
 import com.aura.store.exception.BusinessException;
 import com.aura.store.service.BrandService;
 import com.aura.store.service.CategoryService;
+import com.aura.store.service.ColorService;
 import com.aura.store.service.ProductService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -28,12 +29,13 @@ import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 @Controller
 @RequiredArgsConstructor
-@PreAuthorize("hasAuthority('catalog.read')")
+@PreAuthorize("hasAuthority('catalog.read') and hasAnyRole('SALES', 'SYSTEM_ADMIN')")
 // TODO: Người phụ trách: Minh Thức.
 public class CatalogManagementController {
     private final BrandService brandService;
     private final CategoryService categoryService;
     private final ProductService productService;
+    private final ColorService colorService;
 
     /** Hien danh sach san pham voi bo loc va phan trang. */
     @GetMapping("/management/products")
@@ -54,7 +56,7 @@ public class CatalogManagementController {
     }
 
     /** Hien form tao san pham moi. */
-    @PreAuthorize("hasAuthority('catalog.manage')")
+    @PreAuthorize("hasAuthority('catalog.manage') and hasAnyRole('SALES', 'SYSTEM_ADMIN')")
     @GetMapping("/management/products/new")
     public String newProductPage(Model model) {
         model.addAttribute("productForm", new ProductRequest());
@@ -62,7 +64,7 @@ public class CatalogManagementController {
     }
 
     /** Hien form sua thong tin chung cua san pham. */
-    @PreAuthorize("hasAuthority('catalog.manage')")
+    @PreAuthorize("hasAuthority('catalog.manage') and hasAnyRole('SALES', 'SYSTEM_ADMIN')")
     @GetMapping("/management/products/{id}/edit")
     public String editProductPage(@PathVariable Integer id, Model model) {
         model.addAttribute("productForm", productRequestOf(productService.getManagement(id)));
@@ -70,7 +72,7 @@ public class CatalogManagementController {
     }
 
     /** Tao san pham DRAFT va chuyen den trang quan ly bien the, anh. */
-    @PreAuthorize("hasAuthority('catalog.manage')")
+    @PreAuthorize("hasAuthority('catalog.manage') and hasAnyRole('SALES', 'SYSTEM_ADMIN')")
     @PostMapping("/management/products")
     public String createProduct(@Valid @ModelAttribute("productForm") ProductRequest form,
             BindingResult result, Model model, RedirectAttributes redirect) {
@@ -88,7 +90,7 @@ public class CatalogManagementController {
     }
 
     /** Luu thong tin chung va giu nguyen bien the, anh, ton kho. */
-    @PreAuthorize("hasAuthority('catalog.manage')")
+    @PreAuthorize("hasAuthority('catalog.manage') and hasAnyRole('SALES', 'SYSTEM_ADMIN')")
     @PostMapping("/management/products/{id}")
     public String updateProduct(@PathVariable Integer id,
             @Valid @ModelAttribute("productForm") ProductRequest form, BindingResult result,
@@ -111,13 +113,22 @@ public class CatalogManagementController {
     public String productDetailPage(@PathVariable Integer id, Model model) {
         model.addAttribute("product", productService.getManagement(id));
         model.addAttribute("statuses", PublicationStatus.values());
-        model.addAttribute("variantForm", new ProductVariantRequest());
-        model.addAttribute("imageForm", new ProductImageRequest());
+        model.addAttribute("colors", colorService.activeColors());
+        if (!model.containsAttribute("variantForm")) {
+            ProductVariantRequest form = new ProductVariantRequest();
+            form.setLowStockThreshold(5L);
+            model.addAttribute("variantForm", form);
+        }
+        if (!model.containsAttribute("imageForm")) {
+            ProductImageRequest form = new ProductImageRequest();
+            form.setDisplayOrder(0);
+            model.addAttribute("imageForm", form);
+        }
         return "management/catalog/product-detail";
     }
 
     /** Doi trang thai cong bo theo quy tac nghiep vu trong service. */
-    @PreAuthorize("hasAuthority('catalog.manage')")
+    @PreAuthorize("hasAuthority('catalog.manage') and hasAnyRole('SALES', 'SYSTEM_ADMIN')")
     @PostMapping("/management/products/{id}/status")
     public String changeProductStatus(@PathVariable Integer id,
             @RequestParam PublicationStatus status, RedirectAttributes redirect) {
@@ -131,83 +142,97 @@ public class CatalogManagementController {
     }
 
     /** Them bien the vao san pham va sinh SKU tai service. */
-    @PreAuthorize("hasAuthority('catalog.manage')")
+    @PreAuthorize("hasAuthority('catalog.manage') and hasAnyRole('SALES', 'SYSTEM_ADMIN')")
     @PostMapping("/management/products/{id}/variants")
     public String addVariant(@PathVariable Integer id,
             @Valid @ModelAttribute("variantForm") ProductVariantRequest form,
             BindingResult result, RedirectAttributes redirect) {
         if (result.hasErrors()) {
             redirect.addFlashAttribute("error", firstError(result));
+            redirect.addFlashAttribute("variantForm", form);
+            redirect.addFlashAttribute(BindingResult.MODEL_KEY_PREFIX + "variantForm", result);
         } else {
             try {
                 productService.addVariant(id, form);
                 redirect.addFlashAttribute("success", "Đã thêm biến thể.");
             } catch (BusinessException exception) {
                 redirect.addFlashAttribute("error", exception.getMessage());
+                redirect.addFlashAttribute("variantForm", form);
             }
         }
         return "redirect:/management/products/" + id;
     }
 
     /** Sua gia, mau, kich co va trang thai bien the. */
-    @PreAuthorize("hasAuthority('catalog.manage')")
+    @PreAuthorize("hasAuthority('catalog.manage') and hasAnyRole('SALES', 'SYSTEM_ADMIN')")
     @PostMapping("/management/products/{id}/variants/{variantId}")
     public String updateVariant(@PathVariable Integer id, @PathVariable Integer variantId,
             @Valid @ModelAttribute ProductVariantRequest form, BindingResult result,
             RedirectAttributes redirect) {
         if (result.hasErrors()) {
             redirect.addFlashAttribute("error", firstError(result));
+            redirect.addFlashAttribute("variantEditId", variantId);
+            redirect.addFlashAttribute("variantEditForm", form);
         } else {
             try {
                 productService.updateVariant(id, variantId, form);
                 redirect.addFlashAttribute("success", "Đã cập nhật biến thể.");
             } catch (BusinessException exception) {
                 redirect.addFlashAttribute("error", exception.getMessage());
+                redirect.addFlashAttribute("variantEditId", variantId);
+                redirect.addFlashAttribute("variantEditForm", form);
             }
         }
         return "redirect:/management/products/" + id;
     }
 
     /** Them anh tu URL va cap nhat anh dai dien neu duoc chon. */
-    @PreAuthorize("hasAuthority('catalog.manage')")
+    @PreAuthorize("hasAuthority('catalog.manage') and hasAnyRole('SALES', 'SYSTEM_ADMIN')")
     @PostMapping("/management/products/{id}/images")
     public String addImage(@PathVariable Integer id,
             @Valid @ModelAttribute("imageForm") ProductImageRequest form,
             BindingResult result, RedirectAttributes redirect) {
         if (result.hasErrors()) {
             redirect.addFlashAttribute("error", firstError(result));
+            redirect.addFlashAttribute("imageForm", form);
+            redirect.addFlashAttribute(BindingResult.MODEL_KEY_PREFIX + "imageForm", result);
         } else {
             try {
                 productService.addImage(id, form);
                 redirect.addFlashAttribute("success", "Đã thêm ảnh.");
             } catch (BusinessException exception) {
                 redirect.addFlashAttribute("error", exception.getMessage());
+                redirect.addFlashAttribute("imageForm", form);
             }
         }
         return "redirect:/management/products/" + id;
     }
 
     /** Sua thong tin anh va thay anh dai dien neu duoc chon. */
-    @PreAuthorize("hasAuthority('catalog.manage')")
+    @PreAuthorize("hasAuthority('catalog.manage') and hasAnyRole('SALES', 'SYSTEM_ADMIN')")
     @PostMapping("/management/products/{id}/images/{imageId}")
     public String updateImage(@PathVariable Integer id, @PathVariable Integer imageId,
             @Valid @ModelAttribute ProductImageRequest form, BindingResult result,
             RedirectAttributes redirect) {
         if (result.hasErrors()) {
             redirect.addFlashAttribute("error", firstError(result));
+            redirect.addFlashAttribute("imageEditId", imageId);
+            redirect.addFlashAttribute("imageEditForm", form);
         } else {
             try {
                 productService.updateImage(id, imageId, form);
                 redirect.addFlashAttribute("success", "Đã cập nhật ảnh.");
             } catch (BusinessException exception) {
                 redirect.addFlashAttribute("error", exception.getMessage());
+                redirect.addFlashAttribute("imageEditId", imageId);
+                redirect.addFlashAttribute("imageEditForm", form);
             }
         }
         return "redirect:/management/products/" + id;
     }
 
     /** Xoa anh va chon anh dai dien thay the neu can. */
-    @PreAuthorize("hasAuthority('catalog.manage')")
+    @PreAuthorize("hasAuthority('catalog.manage') and hasAnyRole('SALES', 'SYSTEM_ADMIN')")
     @PostMapping("/management/products/{id}/images/{imageId}/delete")
     public String deleteImage(@PathVariable Integer id, @PathVariable Integer imageId,
             RedirectAttributes redirect) {
@@ -221,6 +246,7 @@ public class CatalogManagementController {
     }
 
     /** Hien danh sach danh muc va form tao moi. */
+    @PreAuthorize("hasAuthority('catalog.read')")
     @GetMapping("/management/categories")
     public String categoryListPage(@RequestParam(defaultValue = "") String keyword,
             @RequestParam(defaultValue = "0") int page, Model model) {
@@ -228,7 +254,7 @@ public class CatalogManagementController {
     }
 
     /** Hien form sua danh muc voi du lieu da co. */
-    @PreAuthorize("hasAuthority('catalog.manage')")
+    @PreAuthorize("hasAuthority('catalog.manage') and hasAnyRole('SALES', 'SYSTEM_ADMIN')")
     @GetMapping("/management/categories/{id}/edit")
     public String editCategoryPage(@PathVariable Integer id, Model model) {
         model.addAttribute("categoryForm", categoryRequestOf(categoryService.get(id)));
@@ -237,7 +263,7 @@ public class CatalogManagementController {
     }
 
     /** Tao danh muc sau khi kiem tra validation va chu trinh cha con. */
-    @PreAuthorize("hasAuthority('catalog.manage')")
+    @PreAuthorize("hasAuthority('catalog.manage') and hasAnyRole('SALES', 'SYSTEM_ADMIN')")
     @PostMapping("/management/categories")
     public String createCategory(@Valid @ModelAttribute("categoryForm") CategoryRequest form,
             BindingResult result, Model model, RedirectAttributes redirect) {
@@ -255,7 +281,7 @@ public class CatalogManagementController {
     }
 
     /** Cap nhat danh muc va giu nguyen lien ket san pham. */
-    @PreAuthorize("hasAuthority('catalog.manage')")
+    @PreAuthorize("hasAuthority('catalog.manage') and hasAnyRole('SALES', 'SYSTEM_ADMIN')")
     @PostMapping("/management/categories/{id}")
     public String updateCategory(@PathVariable Integer id,
             @Valid @ModelAttribute("categoryForm") CategoryRequest form, BindingResult result,
@@ -275,7 +301,7 @@ public class CatalogManagementController {
     }
 
     /** Xoa danh muc neu khong co con hoac san pham. */
-    @PreAuthorize("hasAuthority('catalog.manage')")
+    @PreAuthorize("hasAuthority('catalog.manage') and hasAnyRole('SALES', 'SYSTEM_ADMIN')")
     @PostMapping("/management/categories/{id}/delete")
     public String deleteCategory(@PathVariable Integer id, RedirectAttributes redirect) {
         try {
@@ -288,6 +314,7 @@ public class CatalogManagementController {
     }
 
     /** Hien danh sach thuong hieu va form tao moi. */
+    @PreAuthorize("hasAuthority('catalog.read')")
     @GetMapping("/management/brands")
     public String brandListPage(@RequestParam(defaultValue = "") String keyword,
             @RequestParam(defaultValue = "0") int page, Model model) {
@@ -295,7 +322,7 @@ public class CatalogManagementController {
     }
 
     /** Hien du lieu thuong hieu can sua trong form. */
-    @PreAuthorize("hasAuthority('catalog.manage')")
+    @PreAuthorize("hasAuthority('catalog.manage') and hasAnyRole('SALES', 'SYSTEM_ADMIN')")
     @GetMapping("/management/brands/{id}/edit")
     public String editBrandPage(@PathVariable Integer id, Model model) {
         model.addAttribute("brandForm", brandRequestOf(brandService.get(id)));
@@ -304,7 +331,7 @@ public class CatalogManagementController {
     }
 
     /** Tao thuong hieu moi. */
-    @PreAuthorize("hasAuthority('catalog.manage')")
+    @PreAuthorize("hasAuthority('catalog.manage') and hasAnyRole('SALES', 'SYSTEM_ADMIN')")
     @PostMapping("/management/brands")
     public String createBrand(@Valid @ModelAttribute("brandForm") BrandRequest form,
             BindingResult result, Model model, RedirectAttributes redirect) {
@@ -322,7 +349,7 @@ public class CatalogManagementController {
     }
 
     /** Cap nhat thuong hieu theo ID. */
-    @PreAuthorize("hasAuthority('catalog.manage')")
+    @PreAuthorize("hasAuthority('catalog.manage') and hasAnyRole('SALES', 'SYSTEM_ADMIN')")
     @PostMapping("/management/brands/{id}")
     public String updateBrand(@PathVariable Integer id, @Valid @ModelAttribute("brandForm") BrandRequest form,
             BindingResult result, Model model, RedirectAttributes redirect) {
@@ -341,7 +368,7 @@ public class CatalogManagementController {
     }
 
     /** Xoa thuong hieu neu khong con san pham tham chieu. */
-    @PreAuthorize("hasAuthority('catalog.manage')")
+    @PreAuthorize("hasAuthority('catalog.manage') and hasAnyRole('SALES', 'SYSTEM_ADMIN')")
     @PostMapping("/management/brands/{id}/delete")
     public String deleteBrand(@PathVariable Integer id, RedirectAttributes redirect) {
         try {

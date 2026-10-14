@@ -2,7 +2,9 @@ package com.aura.store.dto.request;
 
 import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.Pattern;
+import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Positive;
+import com.aura.store.validation.annotation.ValidImageUrl;
 import jakarta.validation.constraints.PositiveOrZero;
 import jakarta.validation.constraints.Size;
 import lombok.Getter;
@@ -16,17 +18,22 @@ import lombok.Setter;
 @Getter
 @Setter
 public class ProductImageRequest {
+    @NotNull(message = "Vui long chon bien the cho anh")
+    @Positive(message = "Bien the khong hop le")
+    private Integer variantId;
+
     @NotBlank(message = "URL anh khong duoc de trong")
     @Size(max = 500)
-    @Pattern(regexp = "https?://.+|/images/.+", message = "Anh phai la URL HTTP(S) hoac duong dan /images/")
+    @ValidImageUrl
     private String imageUrl;
 
     @Size(max = 255)
     private String altText = "";
 
+    @NotNull(message = "Vui long nhap thu tu anh")
     @PositiveOrZero
     @Max(value = 32767, message = "Thu tu anh khong duoc vuot qua 32767")
-    private int displayOrder;
+    private Integer displayOrder;
 
     private boolean primary;
 }

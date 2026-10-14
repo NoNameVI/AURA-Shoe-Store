@@ -19,7 +19,7 @@ import lombok.Setter;
 @Setter
 @NoArgsConstructor
 @Entity
-@Table(name = "shipping_methods")
+@Table(name = "shipping_method")
 public class ShippingMethod extends TimestampedEntity {
 
     @Id

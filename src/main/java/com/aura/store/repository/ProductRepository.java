@@ -50,8 +50,14 @@ public interface ProductRepository extends JpaRepository<Product, Integer> {
     /** Kiem tra thuong hieu co san pham tham chieu truoc khi xoa. */
     boolean existsByBrand_Id(Integer brandId);
 
+    /** Kiem tra thuong hieu co san pham dang duoc cong bo. */
+    boolean existsByBrand_IdAndPublicationStatus(Integer brandId, PublicationStatus status);
+
     /** Kiem tra danh muc co san pham tham chieu truoc khi xoa. */
     boolean existsByCategory_Id(Integer categoryId);
+
+    /** Kiem tra danh muc co san pham dang duoc cong bo. */
+    boolean existsByCategory_IdAndPublicationStatus(Integer categoryId, PublicationStatus status);
 
     /** Kiem tra slug san pham trung lap. */
     boolean existsBySlugIgnoreCase(String slug);

@@ -14,6 +14,8 @@ import lombok.Setter;
 public class ProductVariantResponse {
     private Integer id;
     private String sku;
+    private Integer colorId;
+    private String colorCode;
     private String colorName;
     private String sizeCode;
     private BigDecimal salePrice;
