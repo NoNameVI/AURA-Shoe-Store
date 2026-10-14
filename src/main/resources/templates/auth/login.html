@@ -22,10 +22,10 @@
             <p class="form-message error" th:if="${param.error}" role="alert">Tên đăng nhập, mật khẩu hoặc trạng thái tài khoản không hợp lệ.</p>
             <p class="form-message" th:if="${param.logout}">Bạn đã đăng xuất.</p>
             <label>TÊN ĐĂNG NHẬP HOẶC EMAIL
-                <input name="username" autocomplete="username" required autofocus>
+                <input name="username" autocomplete="username" maxlength="255" required autofocus>
             </label>
             <label>MẬT KHẨU
-                <input type="password" name="password" autocomplete="current-password" required>
+                <input type="password" name="password" autocomplete="current-password" maxlength="255" required>
             </label>
             <button class="primary-button" type="submit">Đăng nhập <span aria-hidden="true">↗</span></button>
         </form>

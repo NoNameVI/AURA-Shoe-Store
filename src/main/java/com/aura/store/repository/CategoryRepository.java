@@ -17,6 +17,12 @@ public interface CategoryRepository extends JpaRepository<Category, Integer> {
     @Query("select c from Category c where :keyword = '' or lower(c.categoryName) like lower(concat('%', :keyword, '%')) or lower(c.slug) like lower(concat('%', :keyword, '%'))")
     Page<Category> search(@Param("keyword") String keyword, Pageable pageable);
 
+    /** Tim danh muc cong khai, khong de lo danh muc da tat. */
+    @Query("select c from Category c where c.active = true and "
+            + "(:keyword = '' or lower(c.categoryName) like lower(concat('%', :keyword, '%')) "
+            + "or lower(c.slug) like lower(concat('%', :keyword, '%')))")
+    Page<Category> searchActive(@Param("keyword") String keyword, Pageable pageable);
+
     /** Lay danh muc dang hoat dong cho form va bo loc. */
     List<Category> findByActiveTrueOrderByCategoryNameAsc();
 
@@ -28,5 +34,8 @@ public interface CategoryRepository extends JpaRepository<Category, Integer> {
 
     /** Kiem tra danh muc con truoc khi xoa. */
     boolean existsByParent_Id(Integer parentId);
+
+    /** Kiem tra danh muc cha co danh muc con dang hoat dong. */
+    boolean existsByParent_IdAndActiveTrue(Integer parentId);
 }
 

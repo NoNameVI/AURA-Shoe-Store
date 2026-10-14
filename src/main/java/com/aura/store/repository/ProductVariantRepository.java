@@ -16,7 +16,10 @@ public interface ProductVariantRepository extends JpaRepository<ProductVariant, 
     boolean existsBySkuIgnoreCase(String sku);
 
     /** Kiem tra to hop mau va size tren cung san pham. */
-    boolean existsByProduct_IdAndColorNameIgnoreCaseAndSizeCodeIgnoreCase(
-            Integer productId, String colorName, String sizeCode);
+    boolean existsByProduct_IdAndColor_IdAndSizeCodeIgnoreCase(
+            Integer productId, Integer colorId, String sizeCode);
+
+    /** Kiem tra mau da duoc mot bien the su dung. */
+    boolean existsByColor_Id(Integer colorId);
 }
 

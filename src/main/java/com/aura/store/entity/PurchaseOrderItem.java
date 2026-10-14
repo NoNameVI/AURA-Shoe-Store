@@ -19,7 +19,7 @@ import lombok.Setter;
 @Setter
 @NoArgsConstructor
 @Entity
-@Table(name = "purchase_order_items")
+@Table(name = "purchase_order_item")
 public class PurchaseOrderItem extends TimestampedEntity {
 
     @Id

@@ -13,6 +13,9 @@ public interface CategoryService {
     /** Tim danh muc trong trang quan tri. */
     Page<CategoryResponse> search(String keyword, int page);
 
+    /** Tim danh muc dang hoat dong cho moi nguoi xem cua hang. */
+    Page<CategoryResponse> searchPublic(String keyword, int page);
+
     /** Lay danh muc dang hoat dong cho form va bo loc. */
     List<CategoryResponse> activeCategories();
 

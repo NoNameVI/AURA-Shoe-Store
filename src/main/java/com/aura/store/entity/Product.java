@@ -26,7 +26,7 @@ import java.time.LocalDateTime;
 @Setter
 @NoArgsConstructor
 @Entity
-@Table(name = "products")
+@Table(name = "product")
 public class Product extends TimestampedEntity {
 
     @Id

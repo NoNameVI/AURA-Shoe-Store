@@ -5,6 +5,7 @@ import jakarta.validation.constraints.Digits;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.PositiveOrZero;
+import jakarta.validation.constraints.Positive;
 import jakarta.validation.constraints.Size;
 import java.math.BigDecimal;
 import lombok.Getter;
@@ -18,9 +19,9 @@ import lombok.Setter;
 @Getter
 @Setter
 public class ProductVariantRequest {
-    @NotBlank(message = "Mau sac khong duoc de trong")
-    @Size(max = 100)
-    private String colorName;
+    @NotNull(message = "Vui long chon mau")
+    @Positive(message = "Mau khong hop le")
+    private Integer colorId;
 
     @NotBlank(message = "Kich co khong duoc de trong")
     @Size(max = 10)
@@ -28,16 +29,12 @@ public class ProductVariantRequest {
 
     @NotNull(message = "Gia ban khong duoc de trong")
     @DecimalMin(value = "0.00")
-    @Digits(integer = 16, fraction = 2)
+    @Digits(integer = 10, fraction = 2, message = "Gia ban toi da 10 chu so nguyen va 2 chu so thap phan")
     private BigDecimal salePrice;
 
-    @NotNull(message = "Gia von khong duoc de trong")
-    @DecimalMin(value = "0.00")
-    @Digits(integer = 16, fraction = 2)
-    private BigDecimal costPrice;
-
-    @PositiveOrZero
-    private long lowStockThreshold = 5;
+    @NotNull(message = "Vui long nhap nguong sap het")
+    @PositiveOrZero(message = "Nguong sap het khong duoc am")
+    private Long lowStockThreshold;
 
     private boolean active = true;
 }

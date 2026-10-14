@@ -1,7 +1,6 @@
 package com.aura.store.entity;
 
 import com.aura.store.enums.AccountStatus;
-import com.aura.store.enums.AccountType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
@@ -24,7 +23,7 @@ import lombok.Setter;
 @Setter
 @NoArgsConstructor
 @Entity
-@Table(name = "accounts")
+@Table(name = "account")
 public class Account extends TimestampedEntity {
 
     @Id
@@ -38,15 +37,14 @@ public class Account extends TimestampedEntity {
     @Column(name = "email", nullable = false, length = 255)
     private String email;
 
+    @Column(name = "full_name", nullable = false, length = 150)
+    private String fullName;
+
     @Column(name = "password_hash", length = 255)
     private String passwordHash;
 
     @Column(name = "is_google_auth", nullable = false)
     private boolean googleAuth;
-
-    @Enumerated(EnumType.STRING)
-    @Column(name = "account_type", nullable = false, length = 20)
-    private AccountType accountType;
 
     @Enumerated(EnumType.STRING)
     @Column(name = "account_status", nullable = false, length = 20)

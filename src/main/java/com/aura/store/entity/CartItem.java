@@ -19,7 +19,7 @@ import lombok.Setter;
 @Setter
 @NoArgsConstructor
 @Entity
-@Table(name = "cart_items")
+@Table(name = "cart_item")
 public class CartItem extends TimestampedEntity {
 
     @Id

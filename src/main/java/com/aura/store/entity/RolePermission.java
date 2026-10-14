@@ -15,7 +15,7 @@ import lombok.Setter;
 @Setter
 @NoArgsConstructor
 @Entity
-@Table(name = "role_permissions")
+@Table(name = "role_permission")
 public class RolePermission {
 
     @EmbeddedId

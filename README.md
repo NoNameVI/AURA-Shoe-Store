@@ -1,6 +1,6 @@
 # AURA Store
 
-AURA Store là hệ thống quản lý và bán giày trực tuyến được xây dựng bằng Spring Boot, Spring MVC và Thymeleaf. Dự án phục vụ đồ án môn học, đồng thời được tổ chức theo các quy ước gần với một dự án thực tế để nhiều thành viên có thể phát triển song song.
+AURA Store là hệ thống thương mại điện tử (e-commerce) bán giày kết hợp quản lý cửa hàng, được xây dựng bằng Spring Boot, Spring MVC và Thymeleaf. Dự án phục vụ đồ án môn học, đồng thời được tổ chức theo các quy ước gần với một dự án thực tế để nhiều thành viên có thể phát triển song song.
 
 > Trạng thái hiện tại: bộ khung kiến trúc đã được tạo đầy đủ. Entity, DTO,
 > repository, mapper, service implementation, controller và giao diện hiện là
@@ -24,6 +24,8 @@ AURA Store là hệ thống quản lý và bán giày trực tuyến được x�
 - [Trạng thái triển khai](#trạng-thái-triển-khai)
 
 ## Phạm vi nghiệp vụ
+
+Hệ thống gồm storefront cho khách mua sắm trực tuyến và khu vực quản lý dành cho nhân viên.
 
 Hệ thống dự kiến hỗ trợ các nhóm chức năng sau:
 
@@ -185,7 +187,9 @@ Interface chỉ nên chứa chữ ký thể hiện use case. Không đưa JPA qu
 
 Các file đã tồn tại để thành viên không phải tự quyết định lại cấu trúc dự án:
 
-- 28 entity tương ứng 28 bảng, hai base entity và khóa ghép `RolePermissionId`.
+- 28 entity hiện có, hai base entity và khóa ghép `RolePermissionId`.
+- `product_version` và `inventory_document_item` là hai bảng mới; entity/repository
+  cho nghiệp vụ đọc và sửa dòng phiếu sẽ được bổ sung cùng function tương ứng.
 - 28 Spring Data repository.
 - Request/response DTO cho các use case chắc chắn có.
 - 24 service interface và implementation shell tương ứng.
@@ -227,8 +231,8 @@ Không chấp nhận:
 
 ## Thiết kế database
 
-Schema sau V4 sử dụng 28 bảng, 2 view và 13 trigger. Danh tính Google
-liên kết qua `accounts.oauth_subject`; ứng dụng không lưu access/refresh token
+Schema sau V1 sử dụng 31 bảng, 2 view và 26 trigger. Danh tính Google
+liên kết qua `account.oauth_subject`; ứng dụng không lưu access/refresh token
 Google trong database. Các đối tượng database được chia thành các nhóm chính:
 
 - IAM/RBAC: tài khoản, khách hàng, nhân viên, role, permission và audit log.
@@ -240,11 +244,12 @@ Google trong database. Các đối tượng database được chia thành các n
 
 ### Quy tắc database quan trọng
 
-- `accounts` là danh tính đăng nhập chung; `customers` và `staffs` dùng shared primary key với `accounts`.
-- Tồn hiện tại nằm ở `product_variants.stock_quantity`.
+- `account` là danh tính đăng nhập chung; `customer` và `staff` dùng shared primary key với `account`.
+- Tồn hiện tại nằm ở `product_variant.stock_quantity`.
 - Tồn khả dụng bằng tồn thực tế trừ số lượng đang được giữ.
 - Không cập nhật trực tiếp tồn kho từ service thông thường.
-- Mọi biến động kho phải đi qua `inventory_documents` và `inventory_transactions`.
+- Mọi biến động kho phải đi qua `inventory_document`, `inventory_document_item`
+  và `inventory_transaction`; trigger tạo ledger khi phiếu chuyển sang `POSTED`.
 - Giao dịch kho và audit log là append-only; không update hoặc delete.
 - Đơn hàng lưu snapshot sản phẩm, giá, địa chỉ và phương thức vận chuyển để bảo toàn lịch sử.
 - Checkout, ghi sổ kho và các quy trình nhiều bước phải chạy trong transaction.
@@ -339,18 +344,19 @@ log_bin_trust_function_creators = ON
 GRANT ALL PRIVILEGES ON `aura_store`.* TO `aura_app`@`localhost`
 ```
 
-Không chạy file clean-install SQL bằng tay. Khi ứng dụng khởi động lần
-đầu, Flyway sẽ tự tạo 28 bảng nghiệp vụ sau V4, 2 view, 13 trigger và dữ
-liệu role/permission.
+Không chạy file clean-install SQL bằng tay trên database cần giữ dữ liệu.
+Khi ứng dụng khởi động lần đầu trên database rỗng, Flyway sẽ tạo 31 bảng
+nghiệp vụ, 2 view, 26 trigger, quyền nền và dữ liệu demo local.
 
 > Nếu `SET PERSIST` bị từ chối, chạy
 > `SET GLOBAL log_bin_trust_function_creators = ON;`. Cách này có hiệu lực
 > ngay nhưng có thể phải chạy lại sau khi khởi động MySQL.
 
-#### Chỉ khi cài đặt local trước đó bị lỗi
+#### Xóa và tạo lại database local
 
-Nếu Flyway đã chạy dở và `aura_store` chưa có dữ liệu cần giữ, đăng
-nhập bằng `root` và tạo lại database sạch:
+Chỉ thực hiện khi đã xác nhận toàn bộ dữ liệu trong `aura_store` có thể xóa.
+Mở `scripts/reset-local-database.sql` trong MySQL Workbench, đăng nhập bằng
+`root` và chạy toàn bộ file. Nội dung file là:
 
 ```sql
 DROP DATABASE IF EXISTS aura_store;
@@ -358,14 +364,11 @@ DROP DATABASE IF EXISTS aura_store;
 CREATE DATABASE aura_store
     CHARACTER SET utf8mb4
     COLLATE utf8mb4_vi_0900_ai_ci;
-
-GRANT ALL PRIVILEGES
-    ON aura_store.*
-    TO 'aura_app'@'localhost';
 ```
 
-Không chạy khối reset trên nếu database có dữ liệu cần giữ. Không tự
-bật `baseline-on-migrate` để che giấu database sai trạng thái.
+Nếu `aura_app` chưa có quyền trên schema vừa tạo, chạy lại lệnh `GRANT` ở
+bước 2. Sau đó khởi động ứng dụng để Flyway tự áp dụng V1–V3. Không tự bật
+`baseline-on-migrate` để che giấu database sai trạng thái.
 
 ### 3. Tạo Run Configuration và biến môi trường
 
@@ -438,7 +441,7 @@ Lần chạy đầu thành công sẽ có các log tương tự:
 
 ```text
 AuraHikariPool - Start completed
-Successfully applied 5 migrations
+Successfully applied 3 migrations
 Tomcat started on port 8080
 Started AuraShoreStoreApplication
 ```
@@ -471,7 +474,7 @@ WHERE table_schema = 'aura_store'
   AND table_type = 'BASE TABLE';
 ```
 
-Migration V1 đến V5 phải có `success = 1`. Schema nghiệp vụ có 28 bảng; MySQL
+Migration V1 đến V3 phải có `success = 1`. Schema nghiệp vụ có 31 bảng; MySQL
 còn hiển thị thêm `flyway_schema_history` do Flyway quản lý.
 
 ### 6. Đóng gói và chạy JAR
@@ -501,79 +504,77 @@ Migration hiện tại:
 
 ```text
 V1__initialize_aura_schema.sql
-V2__standardize_numeric_ids_as_int.sql
-V3__seed_demo_catalog.sql
-V4__remove_google_oauth_tokens.sql
-V5__seed_demo_journey.sql
+V2__seed_reference_and_demo_catalog.sql
+V3__seed_demo_business_journey.sql
 ```
 
-V1 tạo schema ban đầu, bao gồm 29 bảng, 2 view, 13 trigger
-và dữ liệu nền cho role, permission, role-permission. Nó không chứa
-`DROP DATABASE`, `CREATE DATABASE`, `USE` hoặc các câu lệnh kiểm tra cài đặt.
-V2 chuyển toàn bộ ID dạng số và khóa ngoại tương ứng sang `INT` có dấu,
-giữ nguyên các cột số lượng `BIGINT`; database đã chạy V1 sẽ được nâng cấp
-khi ứng dụng khởi động. Trước khi chạy V2 trên database có dữ liệu, cần sao lưu:
-MySQL tự commit từng lệnh DDL, nên lỗi giữa migration có thể để lại schema
-chuyển đổi dở. V2 kiểm tra trước giá trị ID và bộ đếm `AUTO_INCREMENT` có
-vượt giới hạn `INT` hay không.
-V3 thêm dữ liệu danh mục mẫu có mã/slug cố định: 3 thương hiệu, 5 danh mục,
-2 nhà cung cấp, 8 sản phẩm `DRAFT` và 24 biến thể. Các biến thể có tồn kho 0;
-V3 không tạo tài khoản, ảnh, phiếu kho, đơn hàng hay thanh toán. Bộ dữ liệu mẫu
-này được Flyway chạy ở mọi môi trường dùng chung thư mục migration.
-V4 gỡ bảng `google_oauth_tokens` khỏi database đã chạy V1/V2. V1 và V2 được
-giữ nguyên để Flyway không báo sai checksum. Nếu trước đó đã có token trong bảng,
-hãy sao lưu trước khi khởi động với V4; thao tác gỡ bảng sẽ xóa các bản ghi đó.
-V5 tạo dữ liệu demo cho quy trình mua hàng, kho, bán hàng và hậu mãi. Vì nằm
-trong `db/migration`, nó tự chạy khi khởi động trên mọi database chưa áp dụng V5.
-V5 yêu cầu database phát triển mới chỉ có dữ liệu nền V1–V3; nếu đã có tài khoản,
-phiếu kho, đơn hàng, ảnh sản phẩm hoặc tồn kho, migration sẽ từ chối chạy.
+V1 tạo schema mới từ `AURA_database_newversion.sql`: 31 bảng, 2 view và
+26 trigger. Tên bảng dùng dạng số ít; `product_version` lưu lịch sử sản phẩm,
+`inventory_document_item` lưu dòng phiếu, còn `inventory_transaction` chỉ được
+tạo khi post phiếu. V1 không chứa lệnh xóa/tạo database hoặc dữ liệu demo.
+V2 thêm role, permission, 7 màu, 3 thương hiệu, 5 danh mục, 2 nhà cung cấp,
+8 sản phẩm `DRAFT`, 24 biến thể và 30 bản ghi ảnh theo biến thể từ 10 file ảnh giày khác nhau. V2 cũng tạo 6 tài khoản
+demo, hồ sơ nhân viên/khách hàng, địa chỉ, phương thức giao hàng và voucher.
+V3 tạo đơn mua, phiếu nhập/xuất, đơn bán, thanh toán, giỏ
+hàng, yêu thích, đánh giá và yêu cầu hậu mãi. Tồn kho thay đổi qua trigger khi
+phiếu đã duyệt được post, không cập nhật trực tiếp từ seed.
+
+V1–V3 là chuỗi clean-install mới cho database phát triển. Nếu database local đã
+áp dụng chuỗi cũ, cần sao lưu dữ liệu cần giữ và chạy script reset ở trên; không
+chỉnh `flyway_schema_history` hay dùng `repair` để ép checksum. V2–V3 chứa
+dữ liệu demo và tài khoản công khai, không triển khai lên production.
 
 Migration tiếp theo đặt tên tăng dần:
 
 ```text
-V6__short_description.sql
-V7__short_description.sql
+V4__short_description.sql
+V5__short_description.sql
 ```
 
 ### Dữ liệu demo giao diện (tự chạy qua Flyway)
 
-`src/main/resources/db/migration/V5__seed_demo_journey.sql` tự chạy sau V4
-trên database rỗng của nhóm. Không chạy bản build có V5 trên production:
-nó tạo tài khoản với mật khẩu demo công khai và giao dịch giả lập. Nếu một
-database đã có dữ liệu nghiệp vụ, cần sao lưu và dùng database phát triển mới
-trước khi chạy V5; không xóa database có dữ liệu cần giữ chỉ để vượt qua guard.
+V2–V3 tự chạy sau V1 trên database phát triển rỗng. Không dùng bộ migration
+demo này cho production vì nó chứa tài khoản và giao dịch giả lập.
 
-Các tài khoản được tạo: `demo.warehouse.creator`, `demo.warehouse.approver`,
-`demo.sales`, `demo.customer`, `demo.browser`. Cả năm được gán mật khẩu
+V2 tạo `demo.warehouse.creator`, `demo.warehouse.approver`, `demo.sales`,
+`demo.customer`, `demo.browser` và `demo.admin`. Cả sáu dùng mật khẩu
 `your_local_password`; script chỉ lưu BCrypt hash đã kiểm tra bằng
 `BCryptPasswordEncoder`. Chuỗi này trùng với mật khẩu MySQL local trong ví dụ
 README theo yêu cầu demo, nhưng hai loại tài khoản độc lập. Không dùng cách đặt
 trùng mật khẩu này ngoài môi trường phát triển. Form `/login` hiện xác thực
-username hoặc email từ `accounts` bằng BCrypt. Quyền nhân viên được lấy từ
-`staffs`, `roles`, `role_permissions` và `permissions`; tài khoản đã tắt, bị
+username hoặc email từ `account` bằng BCrypt. Loại tài khoản được suy ra từ
+`customer` hoặc `staff`; quyền nhân viên lấy từ `role` và `role_permission`.
+Tài khoản đã tắt, bị
 khóa, xóa mềm hoặc chỉ dùng Google không thể đăng nhập bằng mật khẩu.
-`demo.warehouse.creator` có quyền `catalog.read` và `catalog.manage` để thử
-`/management/products`, `/management/categories`, `/management/brands`.
-`demo.sales` chỉ có `catalog.read`; `demo.customer` không vào được `/management`.
+`demo.warehouse.creator` có `catalog.read` để xem Category và Brand trong quản trị,
+nhưng không quản lý Product. `demo.sales` và `demo.admin` có cả `catalog.read`
+và `catalog.manage` để tạo Category, Brand, Product. `demo.customer` không vào
+được `/management` nhưng có thể tìm và xem danh mục tại `/categories`.
 Test tích hợp tài khoản demo chỉ chạy khi đặt `AURA_RUN_DEMO_LOGIN_IT=true` và
-`AURA_DB_PASSWORD` cho database phát triển đã seed V5.
+`AURA_DB_PASSWORD` cho database phát triển đã seed V3. `demo.admin` có role
+`SYSTEM_ADMIN` và các permission theo ma trận phân quyền của V2.
+
+Phạm vi Create Product của Iteration 1: lưu brand, category và thông tin mẫu giày
+thành `DRAFT`. Giá bán, kích cỡ, màu và ảnh được thêm sau trên trang chi tiết;
+không bắt buộc có biến thể khi lưu bản nháp.
 
 ### Tài khoản đăng nhập khi kiểm thử
 
-Các tài khoản dưới đây được tạo bởi migration V5 trên database phát triển mới.
-Đăng nhập bằng username hoặc email; tất cả dùng chung mật khẩu
-`your_local_password`.
+V2 tạo cả sáu tài khoản. Đăng nhập bằng
+username hoặc email; tất cả dùng chung mật khẩu `your_local_password`.
 
 | Username | Vai trò | Gợi ý kiểm thử |
 |---|---|---|
-| `demo.warehouse.creator` | Nhân viên kho (`WAREHOUSE`) | Xem quyền truy cập màn hình quản lý catalog và quy trình lập phiếu kho. |
+| `demo.warehouse.creator` | Nhân viên kho (`WAREHOUSE`) | Xem danh mục/thương hiệu và quy trình lập phiếu kho; không tạo Product. |
 | `demo.warehouse.approver` | Nhân viên kho (`WAREHOUSE`) | Kiểm tra luồng nhân viên kho duyệt phiếu. |
-| `demo.sales` | Nhân viên bán hàng (`SALES`) | Kiểm tra tài khoản nhân viên chỉ có quyền đọc catalog. |
+| `demo.sales` | Nhân viên bán hàng (`SALES`) | Tạo Category, Brand và Product ở trạng thái DRAFT. |
 | `demo.customer` | Khách hàng (`CUSTOMER`) | Thử tài khoản mua hàng có dữ liệu đơn hàng và hồ sơ demo. |
 | `demo.browser` | Khách hàng (`CUSTOMER`) | Thử luồng khách hàng xem cửa hàng. |
+| `demo.admin` | Quản trị hệ thống (`SYSTEM_ADMIN`) | Kiểm tra quyền nhân viên, phân quyền và audit theo V2. |
 
-Không dùng các tài khoản demo này trên production. Database phải chạy Flyway
-V5 thành công thì các tài khoản mới đăng nhập được.
+Tất cả sáu tài khoản dùng mật khẩu `your_local_password`. Không dùng các tài
+khoản demo này trên production. Database phải chạy Flyway V2 thành công thì
+các tài khoản demo mới đăng nhập được.
 
 ### Đường dẫn màn hình để xem dự án
 
@@ -586,6 +587,7 @@ cần thay phần trong ngoặc bằng ID thực tế lấy từ dữ liệu c�
 | Màn hình | Đường dẫn |
 |---|---|
 | Trang chủ | [http://localhost:8080/](http://localhost:8080/) |
+| Tìm và xem danh mục | [http://localhost:8080/categories](http://localhost:8080/categories) |
 | Danh sách sản phẩm | [http://localhost:8080/products](http://localhost:8080/products) |
 | Chi tiết sản phẩm | `http://localhost:8080/products/{productId}` |
 | Giỏ hàng | [http://localhost:8080/cart](http://localhost:8080/cart) |
@@ -635,32 +637,34 @@ cần thay phần trong ngoặc bằng ID thực tế lấy từ dữ liệu c�
 | Phương thức vận chuyển | [http://localhost:8080/management/shipping-methods](http://localhost:8080/management/shipping-methods) |
 | Báo cáo | [http://localhost:8080/management/reports](http://localhost:8080/management/reports) |
 
-Script tạo hành trình nhập 100 đôi AURA Sprint và 60 đôi Nova Core, bán 2 đôi
-Sprint, nhận trả 1 đôi, hoàn tiền một phần, kiểm kê giảm 1 đôi Nova Core, cùng
-đơn hàng COD, lịch sử trạng thái, đánh giá, giỏ hàng, yêu thích và audit log.
-Ảnh sản phẩm dùng `/images/demo/shoe-placeholder.svg` — hình minh họa nội bộ,
-không phải ảnh sản phẩm thật. Sau seed, tồn Sprint size 40 là 99, Nova Core
-size 40 là 59 (trong đó 1 đôi được giữ trong giỏ). `google_oauth_tokens` không
-còn tồn tại; đăng nhập Google chỉ dùng `accounts.oauth_subject` để liên kết
+Script tạo hành trình nhập 100 đôi AURA Sprint và 60 đôi Nova Core, xuất 1 đôi
+Sprint cho đơn hàng COD, cùng lịch sử trạng thái, thanh toán, đánh giá, yêu cầu
+trả hàng đang mở, giỏ hàng, yêu thích và audit log.
+Ảnh sản phẩm demo nằm trong `src/main/resources/static/images/demo/`: mỗi mẫu giày
+có ảnh riêng và Sprint/Trail có thêm một góc chụp. Đây là ảnh minh họa được tạo
+cho dữ liệu mẫu. Sau seed, tồn Sprint size 40 là 99, Nova Core
+size 40 là 60 (trong đó 1 đôi được giữ trong giỏ). Không có bảng
+`google_oauth_tokens`; đăng nhập Google chỉ dùng `account.oauth_subject` để liên kết
 danh tính sau khi xác minh với Google.
 
-Kiểm tra kết quả sau khi Flyway chạy V5:
+Kiểm tra kết quả sau khi Flyway chạy V3:
 
 ```sql
 SELECT sku, stock_quantity, reserved_quantity, available_quantity
-FROM product_variants
+FROM product_variant
 WHERE sku IN ('DEMO-AS01-GRY-40', 'DEMO-NC02-WHT-40');
 
-SELECT po_code, status FROM purchase_orders WHERE po_code = 'PO-DEMO-001';
+SELECT po_code, status FROM purchase_order WHERE po_code = 'PO-DEMO-001';
 SELECT order_code, order_status, payment_status, total_amount
-FROM orders WHERE order_code = 'ORD-DEMO-001';
+FROM sales_order WHERE order_code = 'SO-DEMO-001';
 ```
 
 Quy tắc:
 
 1. Không đặt `DROP DATABASE`, `CREATE DATABASE` hoặc `USE database` trong migration.
-2. Không sửa migration đã được merge hoặc đã chạy trên máy thành viên khác.
-3. Mỗi thay đổi schema phải tạo migration mới.
+2. Chuỗi V1–V3 hiện tại là clean-install mới; database local dùng chuỗi cũ phải
+   được sao lưu và reset. Sau khi nhóm đã áp dụng chuỗi mới, không sửa các file này.
+3. Mỗi thay đổi schema về sau phải tạo migration mới bắt đầu từ V4.
 4. Không bật `baseline-on-migrate` để che giấu database sai trạng thái.
 5. Không dùng cả Flyway và `schema.sql`/`data.sql` cho cùng một schema.
 6. Kiểm tra lịch sử bằng bảng `flyway_schema_history`.

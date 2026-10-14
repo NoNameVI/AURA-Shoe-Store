@@ -3,12 +3,14 @@ package com.aura.store.service.impl;
 import com.aura.store.dto.request.BrandRequest;
 import com.aura.store.dto.response.BrandResponse;
 import com.aura.store.entity.Brand;
+import com.aura.store.enums.PublicationStatus;
 import com.aura.store.exception.BusinessException;
 import com.aura.store.exception.ResourceNotFoundException;
 import com.aura.store.mapper.BrandMapper;
 import com.aura.store.repository.BrandRepository;
 import com.aura.store.repository.ProductRepository;
 import com.aura.store.service.BrandService;
+import com.aura.store.validation.SearchInput;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
@@ -32,8 +34,8 @@ public class BrandServiceImpl implements BrandService {
     /** Tim thuong hieu va chuyen trang ket qua sang DTO. */
     @Override
     public Page<BrandResponse> search(String keyword, int page) {
-        return brandRepository.search(keyword == null ? "" : keyword.trim(),
-                PageRequest.of(Math.max(0, page), 12, Sort.by("brandName").ascending()))
+        return brandRepository.search(SearchInput.keyword(keyword),
+                PageRequest.of(SearchInput.page(page), 12, Sort.by("brandName").ascending()))
                 .map(brandMapper::toResponse);
     }
 
@@ -65,6 +67,10 @@ public class BrandServiceImpl implements BrandService {
     @Transactional
     public BrandResponse update(Integer id, BrandRequest request) {
         Brand brand = findBrand(id);
+        if (brand.isActive() && !request.isActive()
+                && productRepository.existsByBrand_IdAndPublicationStatus(id, PublicationStatus.ACTIVE)) {
+            throw new BusinessException("Khong the tat thuong hieu dang co san pham cong bo.");
+        }
         checkUnique(request, brand);
         brandMapper.update(request, brand);
         normalize(brand);
@@ -90,8 +96,9 @@ public class BrandServiceImpl implements BrandService {
 
     /** Bo qua ban ghi hien tai khi kiem tra ten va slug luc cap nhat. */
     private void checkUnique(BrandRequest request, Brand current) {
-        if ((current == null || !current.getSlug().equalsIgnoreCase(request.getSlug()))
-                && brandRepository.existsBySlugIgnoreCase(request.getSlug())) {
+        String slug = request.getSlug().trim();
+        if ((current == null || !current.getSlug().equalsIgnoreCase(slug))
+                && brandRepository.existsBySlugIgnoreCase(slug)) {
             throw new BusinessException("Slug thương hiệu đã tồn tại.");
         }
         if ((current == null || !current.getBrandName().equalsIgnoreCase(request.getBrandName().trim()))

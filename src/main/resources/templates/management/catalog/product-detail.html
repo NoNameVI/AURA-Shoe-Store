@@ -15,7 +15,7 @@
             <span th:text="${product.styleCode ?: product.slug}">Mã mẫu</span></p></div>
         <nav class="catalog-links">
             <a th:href="@{/management/products}">← Danh sách</a>
-            <a sec:authorize="hasAuthority('catalog.manage')"
+            <a sec:authorize="hasAuthority('catalog.manage') and hasAnyRole('SALES', 'SYSTEM_ADMIN')"
                th:href="@{/management/products/{id}/edit(id=${product.id})}">Sửa thông tin</a>
         </nav>
     </div>
@@ -24,7 +24,7 @@
     <section class="page-card">
         <h2>Thông tin và trạng thái</h2>
         <p th:text="${product.description ?: 'Chưa có mô tả.'}">Mô tả</p>
-        <form class="catalog-search" sec:authorize="hasAuthority('catalog.manage')"
+        <form class="catalog-search" sec:authorize="hasAuthority('catalog.manage') and hasAnyRole('SALES', 'SYSTEM_ADMIN')"
               th:action="@{/management/products/{id}/status(id=${product.id})}" method="post">
             <label>Trạng thái công bố <select name="status">
                 <option th:each="option : ${statuses}" th:value="${option}" th:text="${option}"
@@ -32,44 +32,67 @@
             </select></label>
             <button class="primary-button" type="submit">Cập nhật trạng thái</button>
         </form>
-        <p sec:authorize="hasAuthority('catalog.manage')" class="helper-text">Để công bố, sản phẩm cần thương hiệu và danh mục đang hoạt động, ảnh và biến thể còn hàng.</p>
+        <p sec:authorize="hasAuthority('catalog.manage') and hasAnyRole('SALES', 'SYSTEM_ADMIN')" class="helper-text">Để công bố, sản phẩm cần thương hiệu và danh mục đang hoạt động, ảnh và biến thể còn hàng.</p>
         <p sec:authorize="hasAuthority('catalog.read')" th:text="|Trạng thái hiện tại: ${product.publicationStatus}|"></p>
     </section>
     <section class="page-card">
         <h2>Biến thể và SKU</h2>
-        <p class="helper-text">SKU được hệ thống sinh từ ID sản phẩm, màu và kích cỡ. Tồn kho do nghiệp vụ kho quản lý.</p>
+        <p class="helper-text">SKU được hệ thống sinh từ ID sản phẩm, màu và kích cỡ. Tồn kho và giá vốn do nghiệp vụ kho quản lý.</p>
         <div class="variant-list">
             <article class="variant-card" th:each="variant : ${product.variants}">
                 <div class="variant-summary">
                     <strong th:text="${variant.sku}">SKU</strong>
                     <span th:text="|Tồn thực tế: ${variant.stockQuantity} · Đã giữ: ${variant.reservedQuantity} · Khả dụng: ${variant.availableQuantity}|"></span>
                 </div>
-                <form class="catalog-form" sec:authorize="hasAuthority('catalog.manage')" method="post"
+                <form class="catalog-form" sec:authorize="hasAuthority('catalog.manage') and hasAnyRole('SALES', 'SYSTEM_ADMIN')" method="post"
                       th:action="@{/management/products/{id}/variants/{variantId}(id=${product.id},variantId=${variant.id})}">
                     <div class="form-grid">
-                        <label>Màu <input name="colorName" th:value="${variant.colorName}" maxlength="100" required></label>
-                        <label>Kích cỡ <input name="sizeCode" th:value="${variant.sizeCode}" maxlength="10" required></label>
-                        <label>Giá bán (₫) <input type="number" name="salePrice" th:value="${variant.salePrice}" min="0" step="0.01" required></label>
-                        <label>Giá vốn (₫) <input type="number" name="costPrice" th:value="${variant.costPrice}" min="0" step="0.01" required></label>
-                        <label>Ngưỡng sắp hết <input type="number" name="lowStockThreshold" th:value="${variant.lowStockThreshold}" min="0" required></label>
+                        <label>Màu
+                            <div class="color-select-wrapper">
+                                <span class="color-demo-box" aria-hidden="true" title="Xem trước màu"></span>
+                                <select name="colorId" required>
+                                    <option th:each="color : ${colors}" th:value="${color.id}"
+                                            th:text="${color.hexCode != null && !color.hexCode.isEmpty() ? color.colorName + ' (' + color.hexCode + ')' : color.colorName}"
+                                            th:data-hex="${color.hexCode}"
+                                            th:selected="${variantEditId == variant.id ? color.id == variantEditForm.colorId : color.id == variant.colorId}"></option>
+                                </select>
+                            </div>
+                        </label>
+                        <label>Kích cỡ <input name="sizeCode" th:value="${variantEditId == variant.id ? variantEditForm.sizeCode : variant.sizeCode}" maxlength="10" required></label>
+                        <label>Giá bán (₫) <input type="number" name="salePrice" th:value="${variantEditId == variant.id ? variantEditForm.salePrice : variant.salePrice}" min="0" max="9999999999.99" step="0.01" required></label>
+                        <label>Ngưỡng sắp hết <input type="number" name="lowStockThreshold" th:value="${variantEditId == variant.id ? variantEditForm.lowStockThreshold : variant.lowStockThreshold}" min="0" required></label>
                     </div>
                     <input type="hidden" name="_active" value="on">
-                    <label class="check-field"><input type="checkbox" name="active" value="true" th:checked="${variant.active}"> Đang hoạt động</label>
+                    <label class="check-field"><input type="checkbox" name="active" value="true" th:checked="${variantEditId == variant.id ? variantEditForm.active : variant.active}"> Đang hoạt động</label>
                     <button class="primary-button" type="submit">Lưu biến thể</button>
                 </form>
             </article>
             <p th:if="${product.variants.empty}">Sản phẩm chưa có biến thể.</p>
         </div>
-        <h3 sec:authorize="hasAuthority('catalog.manage')">Thêm biến thể</h3>
-        <form class="catalog-form" sec:authorize="hasAuthority('catalog.manage')"
+        <h3 sec:authorize="hasAuthority('catalog.manage') and hasAnyRole('SALES', 'SYSTEM_ADMIN')">Thêm biến thể</h3>
+        <form class="catalog-form" sec:authorize="hasAuthority('catalog.manage') and hasAnyRole('SALES', 'SYSTEM_ADMIN')"
               th:object="${variantForm}" method="post"
               th:action="@{/management/products/{id}/variants(id=${product.id})}">
             <div class="form-grid">
-                <label>Màu <input th:field="*{colorName}" maxlength="100" required></label>
+                <label>Màu
+                    <div class="color-select-wrapper">
+                        <span class="color-demo-box" aria-hidden="true" title="Xem trước màu"></span>
+                        <select th:field="*{colorId}" required>
+                            <option value="" data-hex="">Chọn màu</option>
+                            <option th:each="color : ${colors}" th:value="${color.id}"
+                                    th:text="${color.hexCode != null && !color.hexCode.isEmpty() ? color.colorName + ' (' + color.hexCode + ')' : color.colorName}"
+                                    th:data-hex="${color.hexCode}"></option>
+                        </select>
+                    </div>
+                </label>
+                <small class="field-error" th:if="${#fields.hasErrors('colorId')}" th:errors="*{colorId}"></small>
+                <small class="helper-text">Chưa có màu? <a th:href="@{/management/colors}">Quản lý màu</a></small>
                 <label>Kích cỡ <input th:field="*{sizeCode}" maxlength="10" required></label>
-                <label>Giá bán (₫) <input type="number" th:field="*{salePrice}" min="0" step="0.01" required></label>
-                <label>Giá vốn (₫) <input type="number" th:field="*{costPrice}" min="0" step="0.01" required></label>
+                <small class="field-error" th:if="${#fields.hasErrors('sizeCode')}" th:errors="*{sizeCode}"></small>
+                <label>Giá bán (₫) <input type="number" th:field="*{salePrice}" min="0" max="9999999999.99" step="0.01" required></label>
+                <small class="field-error" th:if="${#fields.hasErrors('salePrice')}" th:errors="*{salePrice}"></small>
                 <label>Ngưỡng sắp hết <input type="number" th:field="*{lowStockThreshold}" min="0" required></label>
+                <small class="field-error" th:if="${#fields.hasErrors('lowStockThreshold')}" th:errors="*{lowStockThreshold}"></small>
             </div>
             <label class="check-field"><input type="checkbox" th:field="*{active}"> Đang hoạt động</label>
             <button class="primary-button" type="submit">Thêm biến thể</button>
@@ -80,20 +103,23 @@
         <div class="image-gallery">
             <article th:each="image : ${product.images}">
                 <img th:src="${image.imageUrl}" th:alt="${image.altText}">
+                <p>Biến thể: <strong th:text="${image.variantSku}">SKU</strong></p>
                 <p><strong th:text="${image.primary ? 'Ảnh đại diện' : 'Ảnh bổ sung'}">Ảnh</strong>
                     · Thứ tự <span th:text="${image.displayOrder}">0</span></p>
-                <form class="catalog-form" sec:authorize="hasAuthority('catalog.manage')"
+                <form class="catalog-form" sec:authorize="hasAuthority('catalog.manage') and hasAnyRole('SALES', 'SYSTEM_ADMIN')"
                       th:action="@{/management/products/{id}/images/{imageId}(id=${product.id},imageId=${image.id})}"
                       method="post">
-                    <label>URL ảnh <input name="imageUrl" th:value="${image.imageUrl}" maxlength="500" required></label>
-                    <label>Văn bản thay thế <input name="altText" th:value="${image.altText}" maxlength="255"></label>
-                    <label>Thứ tự <input type="number" name="displayOrder" th:value="${image.displayOrder}" min="0" max="32767" required></label>
+                    <input type="hidden" name="variantId" th:value="${imageEditId == image.id ? imageEditForm.variantId : image.variantId}">
+                    <label>URL ảnh <input name="imageUrl" th:value="${imageEditId == image.id ? imageEditForm.imageUrl : image.imageUrl}"
+                                          maxlength="500" pattern="https?://[^ ]+|/images/[A-Za-z0-9_./-]+" required></label>
+                    <label>Văn bản thay thế <input name="altText" th:value="${imageEditId == image.id ? imageEditForm.altText : image.altText}" maxlength="255"></label>
+                    <label>Thứ tự <input type="number" name="displayOrder" th:value="${imageEditId == image.id ? imageEditForm.displayOrder : image.displayOrder}" min="0" max="32767" required></label>
                     <input type="hidden" name="_primary" value="on">
                     <label class="check-field"><input type="checkbox" name="primary" value="true"
-                                                      th:checked="${image.primary}"> Ảnh đại diện</label>
+                                                       th:checked="${imageEditId == image.id ? imageEditForm.primary : image.primary}"> Ảnh đại diện</label>
                     <button class="primary-button" type="submit">Lưu ảnh</button>
                 </form>
-                <form sec:authorize="hasAuthority('catalog.manage')"
+                <form sec:authorize="hasAuthority('catalog.manage') and hasAnyRole('SALES', 'SYSTEM_ADMIN')"
                       th:action="@{/management/products/{id}/images/{imageId}/delete(id=${product.id},imageId=${image.id})}"
                       method="post" onsubmit="return confirm('Xóa ảnh này?')">
                     <button class="text-button danger" type="submit">Xóa ảnh</button>
@@ -101,14 +127,25 @@
             </article>
             <p th:if="${product.images.empty}">Sản phẩm chưa có ảnh.</p>
         </div>
-        <h3 sec:authorize="hasAuthority('catalog.manage')">Thêm ảnh từ URL</h3>
-        <form class="catalog-form" sec:authorize="hasAuthority('catalog.manage')"
+        <h3 sec:authorize="hasAuthority('catalog.manage') and hasAnyRole('SALES', 'SYSTEM_ADMIN')">Thêm ảnh từ URL</h3>
+        <form class="catalog-form" sec:authorize="hasAuthority('catalog.manage') and hasAnyRole('SALES', 'SYSTEM_ADMIN')"
               th:object="${imageForm}" method="post"
               th:action="@{/management/products/{id}/images(id=${product.id})}">
             <div class="form-grid">
-                <label>URL ảnh <input th:field="*{imageUrl}" maxlength="500" placeholder="https://... hoặc /images/..." required></label>
+                <label>Biến thể <select th:field="*{variantId}" required>
+                    <option value="">Chọn biến thể</option>
+                    <option th:each="variant : ${product.variants}" th:value="${variant.id}"
+                            th:text="|${variant.sku} · ${variant.colorName} · ${variant.sizeCode}|"></option>
+                </select></label>
+                <small class="field-error" th:if="${#fields.hasErrors('variantId')}" th:errors="*{variantId}"></small>
+                <label>URL ảnh <input th:field="*{imageUrl}" maxlength="500"
+                                      pattern="https?://[^ ]+|/images/[A-Za-z0-9_./-]+"
+                                      placeholder="https://... hoặc /images/..." required></label>
+                <small class="field-error" th:if="${#fields.hasErrors('imageUrl')}" th:errors="*{imageUrl}"></small>
                 <label>Văn bản thay thế <input th:field="*{altText}" maxlength="255"></label>
+                <small class="field-error" th:if="${#fields.hasErrors('altText')}" th:errors="*{altText}"></small>
                 <label>Thứ tự <input type="number" th:field="*{displayOrder}" min="0" max="32767" required></label>
+                <small class="field-error" th:if="${#fields.hasErrors('displayOrder')}" th:errors="*{displayOrder}"></small>
             </div>
             <label class="check-field"><input type="checkbox" th:field="*{primary}"> Đặt làm ảnh đại diện</label>
             <button class="primary-button" type="submit">Thêm ảnh</button>
@@ -116,5 +153,6 @@
     </section>
 </main>
 <footer th:replace="~{fragments/footer :: siteFooter}"></footer>
+<script th:src="@{/js/app.js}"></script>
 </body>
 </html>

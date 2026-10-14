@@ -3,12 +3,14 @@ package com.aura.store.service.impl;
 import com.aura.store.dto.request.CategoryRequest;
 import com.aura.store.dto.response.CategoryResponse;
 import com.aura.store.entity.Category;
+import com.aura.store.enums.PublicationStatus;
 import com.aura.store.exception.BusinessException;
 import com.aura.store.exception.ResourceNotFoundException;
 import com.aura.store.mapper.CategoryMapper;
 import com.aura.store.repository.CategoryRepository;
 import com.aura.store.repository.ProductRepository;
 import com.aura.store.service.CategoryService;
+import com.aura.store.validation.SearchInput;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
@@ -32,8 +34,16 @@ public class CategoryServiceImpl implements CategoryService {
     /** Tim danh muc va chuyen trang ket qua sang DTO. */
     @Override
     public Page<CategoryResponse> search(String keyword, int page) {
-        return categoryRepository.search(keyword == null ? "" : keyword.trim(),
-                PageRequest.of(Math.max(0, page), 12, Sort.by("categoryName").ascending()))
+        return categoryRepository.search(SearchInput.keyword(keyword),
+                PageRequest.of(SearchInput.page(page), 12, Sort.by("categoryName").ascending()))
+                .map(categoryMapper::toResponse);
+    }
+
+    /** Chi tra ve danh muc dang hoat dong tren trang cong khai. */
+    @Override
+    public Page<CategoryResponse> searchPublic(String keyword, int page) {
+        return categoryRepository.searchActive(SearchInput.keyword(keyword),
+                PageRequest.of(SearchInput.page(page), 12, Sort.by("categoryName").ascending()))
                 .map(categoryMapper::toResponse);
     }
 
@@ -74,6 +84,11 @@ public class CategoryServiceImpl implements CategoryService {
     @Transactional
     public CategoryResponse update(Integer id, CategoryRequest request) {
         Category category = findCategory(id);
+        if (category.isActive() && !request.isActive()
+                && (categoryRepository.existsByParent_IdAndActiveTrue(id)
+                || productRepository.existsByCategory_IdAndPublicationStatus(id, PublicationStatus.ACTIVE))) {
+            throw new BusinessException("Khong the tat danh muc dang co danh muc con hoac san pham cong bo.");
+        }
         checkUnique(request, category);
         Category parent = resolveParent(request.getParentId(), id);
         categoryMapper.update(request, category);
@@ -123,8 +138,9 @@ public class CategoryServiceImpl implements CategoryService {
 
     /** Kiem tra slug duy nhat, bo qua ban ghi hien tai khi cap nhat. */
     private void checkUnique(CategoryRequest request, Category current) {
-        if ((current == null || !current.getSlug().equalsIgnoreCase(request.getSlug()))
-                && categoryRepository.existsBySlugIgnoreCase(request.getSlug())) {
+        String slug = request.getSlug().trim();
+        if ((current == null || !current.getSlug().equalsIgnoreCase(slug))
+                && categoryRepository.existsBySlugIgnoreCase(slug)) {
             throw new BusinessException("Slug danh mục đã tồn tại.");
         }
     }

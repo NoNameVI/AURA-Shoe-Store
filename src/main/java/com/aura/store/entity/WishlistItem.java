@@ -19,7 +19,7 @@ import lombok.Setter;
 @Setter
 @NoArgsConstructor
 @Entity
-@Table(name = "wishlist_items")
+@Table(name = "wishlist_item")
 public class WishlistItem extends CreatedAtEntity {
 
     @Id

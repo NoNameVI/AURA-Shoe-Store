@@ -53,7 +53,8 @@ class SupplierManagementViewTest {
                 .andExpect(content().string(org.hamcrest.Matchers.containsString("SUP-001")))
                 .andExpect(content().string(org.hamcrest.Matchers.containsString("SUP-002")))
                 .andExpect(content().string(org.hamcrest.Matchers.containsString("Ngừng hoạt động")))
-                .andExpect(content().string(org.hamcrest.Matchers.containsString("name=\"_csrf\"")));
+                .andExpect(content().string(org.hamcrest.Matchers.containsString("name=\"_csrf\"")))
+                .andExpect(content().string(org.hamcrest.Matchers.containsString("type=\"tel\"")));
     }
 
     /** Trang chi tiết điền dữ liệu hiện tại vào form cập nhật. */
@@ -100,6 +101,36 @@ class SupplierManagementViewTest {
                 .andExpect(status().isOk())
                 .andExpect(content().string(org.hamcrest.Matchers.containsString("Số điện thoại không hợp lệ")));
 
+        verify(supplierService, never()).create(any());
+    }
+
+    /** Email sai dinh dang hien loi tai o email va khong ghi nha cung cap. */
+    @Test
+    void invalidEmailReturnsSupplierForm() throws Exception {
+        when(supplierService.search(any(), anyInt())).thenReturn(pageOf());
+
+        mockMvc.perform(post("/management/suppliers")
+                        .with(csrf())
+                        .param("supplierCode", "SUP-007")
+                        .param("supplierName", "Nha cung cap 07")
+                        .param("email", "wrong-email"))
+                .andExpect(status().isOk())
+                .andExpect(content().string(org.hamcrest.Matchers.containsString("Email không hợp lệ")));
+        verify(supplierService, never()).create(any());
+    }
+
+    /** Ma so thue sai dinh dang khong di qua controller. */
+    @Test
+    void invalidTaxCodeReturnsSupplierForm() throws Exception {
+        when(supplierService.search(any(), anyInt())).thenReturn(pageOf());
+
+        mockMvc.perform(post("/management/suppliers")
+                        .with(csrf())
+                        .param("supplierCode", "SUP-007")
+                        .param("supplierName", "Nha cung cap 07")
+                        .param("taxCode", "123"))
+                .andExpect(status().isOk())
+                .andExpect(content().string(org.hamcrest.Matchers.containsString("Mã số thuế phải có 10 chữ số")));
         verify(supplierService, never()).create(any());
     }
 

@@ -321,6 +321,133 @@ a {
     color: #64748b;
 }
 
+/* Color picker and color preview styling */
+.color-picker-wrapper {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.color-picker-input {
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    appearance: none;
+    width: 44px;
+    height: 38px;
+    padding: 0;
+    border: 1px solid #cbd5e1;
+    border-radius: 0.5rem;
+    background: #ffffff;
+    cursor: pointer;
+    flex-shrink: 0;
+}
+
+.color-picker-input::-webkit-color-swatch-wrapper {
+    padding: 2px;
+}
+
+.color-picker-input::-webkit-color-swatch {
+    border: none;
+    border-radius: 0.35rem;
+}
+
+.color-picker-input::-moz-color-swatch {
+    border: none;
+    border-radius: 0.35rem;
+}
+
+.color-preview-box {
+    width: 38px;
+    height: 38px;
+    border-radius: 0.5rem;
+    border: 1px solid #cbd5e1;
+    background-color: #f1f5f9;
+    flex-shrink: 0;
+    box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.2), 0 1px 2px rgba(0, 0, 0, 0.05);
+    transition: background-color 0.2s ease, border-color 0.2s ease;
+}
+
+.color-preview-box.no-color,
+.color-demo-box.no-color,
+.color-swatch-sm.no-hex {
+    background: repeating-linear-gradient(
+        45deg,
+        #f8fafc,
+        #f8fafc 4px,
+        #e2e8f0 4px,
+        #e2e8f0 8px
+    ) !important;
+    border-style: dashed;
+}
+
+.color-palette-presets {
+    display: flex;
+    align-items: center;
+    gap: 0.45rem;
+    flex-wrap: wrap;
+    margin-top: 0.25rem;
+}
+
+.color-palette-presets .helper-text {
+    font-size: 0.8rem;
+    color: #64748b;
+    margin-right: 0.2rem;
+}
+
+.color-preset-btn {
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    border: 1px solid rgba(0, 0, 0, 0.2);
+    cursor: pointer;
+    padding: 0;
+    transition: transform 0.15s ease, box-shadow 0.15s ease;
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+}
+
+.color-preset-btn:hover {
+    transform: scale(1.18);
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+.color-table-item {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.6rem;
+}
+
+.color-swatch-sm {
+    width: 22px;
+    height: 22px;
+    border-radius: 50%;
+    border: 1px solid rgba(0, 0, 0, 0.15);
+    display: inline-block;
+    flex-shrink: 0;
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.08);
+}
+
+.color-select-wrapper {
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+}
+
+.color-select-wrapper select {
+    flex: 1;
+    min-width: 0;
+}
+
+.color-demo-box {
+    width: 36px;
+    height: 36px;
+    border-radius: 0.5rem;
+    border: 1px solid #cbd5e1;
+    background-color: #f1f5f9;
+    flex-shrink: 0;
+    box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.2), 0 1px 3px rgba(0, 0, 0, 0.08);
+    transition: background-color 0.2s ease, border-color 0.2s ease, transform 0.15s ease;
+}
+
 .image-gallery,
 .product-grid {
     display: grid;
@@ -516,6 +643,19 @@ h1, h2, h3 { color: var(--aura-ink); }
 .shop-results .shop-empty { margin-top: 2rem; }
 .shop-pagination { display: flex; justify-content: space-between; align-items: center; gap: 1rem; margin-top: 4rem; padding-top: 1.5rem; border-top: 1px solid var(--aura-line); color: var(--aura-muted); font-size: .75rem; }
 .shop-pagination a { color: var(--aura-ink); text-decoration: none; }
+
+/* Danh muc cong khai dung cung bo cuc va nhac chu cua storefront. */
+.shop-category-search { display: flex; flex-wrap: wrap; align-items: end; gap: 1rem; padding: 2rem 0; }
+.shop-category-search label { display: grid; gap: .5rem; flex: 1 1 260px; font-size: .7rem; letter-spacing: .08em; }
+.shop-category-search input { width: 100%; padding: .8rem 0; border: 0; border-bottom: 1px solid var(--aura-line); background: transparent; color: var(--aura-ink); font: inherit; }
+.shop-category-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 1rem; margin: 1rem 0 3rem; }
+.shop-category-card { display: flex; flex-direction: column; min-height: 230px; padding: 2rem; border: 1px solid var(--aura-line); color: var(--aura-ink); text-decoration: none; transition: border-color .2s ease, transform .2s ease; }
+.shop-category-card:hover, .shop-category-card:focus-visible { border-color: var(--aura-ink); transform: translateY(-2px); }
+.shop-category-card h2 { margin: 1.4rem 0 .6rem; font-family: var(--aura-heading); font-size: 2rem; font-weight: 400; }
+.shop-category-card p { margin: 0 0 1.5rem; color: var(--aura-muted); line-height: 1.6; }
+.shop-category-link { margin-top: auto; font-size: .75rem; font-weight: 600; }
+@media (max-width: 900px) { .shop-category-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+@media (max-width: 520px) { .shop-category-grid { grid-template-columns: 1fr; } }
 
 /* Trang chi tiet: anh va ma tran size co trang thai ro rang. */
 .shop-detail-layout { display: grid; grid-template-columns: minmax(0, 1.2fr) minmax(320px, .8fr); gap: clamp(3rem, 7vw, 8rem); align-items: start; padding-top: 3rem; }

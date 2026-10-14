@@ -19,7 +19,7 @@ import lombok.Setter;
 @Setter
 @NoArgsConstructor
 @Entity
-@Table(name = "audit_logs")
+@Table(name = "audit_log")
 public class AuditLog extends CreatedAtEntity {
 
     @Id

@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Danh mục giày | AURA Footwear</title>
+    <link rel="stylesheet" th:href="@{/css/app.css}">
+</head>
+<body class="shop-page">
+<header th:replace="~{fragments/header :: siteHeader}"></header>
+<main class="shop-container shop-catalog">
+    <div class="shop-breadcrumb"><a th:href="@{/}">Trang chủ</a><span>/</span><span>Danh mục</span></div>
+    <section class="shop-collection-heading">
+        <div><p class="shop-kicker">THE AURA COLLECTION / CATEGORIES</p>
+            <h1>Danh mục giày</h1>
+            <p>Tìm nhóm giày phù hợp rồi khám phá các sản phẩm trong danh mục.</p></div>
+        <span class="shop-count" th:text="|${categories.totalElements} danh mục|">0 danh mục</span>
+    </section>
+    <form class="shop-category-search" th:action="@{/categories}" method="get" role="search">
+        <label for="category-keyword">Tên hoặc đường dẫn danh mục</label>
+        <input id="category-keyword" name="keyword" th:value="${keyword}" maxlength="100" placeholder="Tìm danh mục">
+        <button class="primary-button" type="submit">Tìm kiếm</button>
+    </form>
+    <section class="shop-category-grid" aria-label="Danh sách danh mục">
+        <a class="shop-category-card" th:each="category : ${categories.content}"
+           th:href="@{/products(categoryId=${category.id})}">
+            <span class="shop-kicker" th:text="${category.parentName ?: 'AURA FOOTWEAR'}">AURA FOOTWEAR</span>
+            <h2 th:text="${category.categoryName}">Danh mục</h2>
+            <p th:text="${category.description ?: 'Khám phá sản phẩm trong danh mục này.'}">Mô tả</p>
+            <span class="shop-category-link">Xem sản phẩm ↗</span>
+        </a>
+    </section>
+    <div class="shop-empty" th:if="${categories.empty}">
+        <h2>Không tìm thấy danh mục.</h2>
+        <p>Thử từ khóa khác hoặc xem tất cả danh mục đang hoạt động.</p>
+        <a class="outline-button" th:href="@{/categories}">Xem tất cả</a>
+    </div>
+    <nav class="pagination" th:if="${categories.totalPages > 1}" aria-label="Phân trang danh mục">
+        <a th:if="${categories.hasPrevious()}"
+           th:href="@{/categories(keyword=${keyword},page=${categories.number - 1})}">Trang trước</a>
+        <span th:text="|Trang ${categories.number + 1} / ${categories.totalPages}|"></span>
+        <a th:if="${categories.hasNext()}"
+           th:href="@{/categories(keyword=${keyword},page=${categories.number + 1})}">Trang sau</a>
+    </nav>
+</main>
+<footer th:replace="~{fragments/footer :: siteFooter}"></footer>
+</body>
+</html>

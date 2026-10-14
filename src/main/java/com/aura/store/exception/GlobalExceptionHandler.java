@@ -4,6 +4,8 @@ import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.http.HttpStatus;
+import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
+import org.springframework.web.bind.MissingServletRequestParameterException;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.servlet.ModelAndView;
@@ -49,6 +51,14 @@ public class GlobalExceptionHandler {
     ) {
         return errorView(HttpStatus.CONFLICT,
                 "Dữ liệu đã tồn tại hoặc đang được sử dụng.", request);
+    }
+
+    /** Tra 400 khi tham so ID, trang hoac trang thai khong dung kieu. */
+    @ExceptionHandler({MethodArgumentTypeMismatchException.class,
+            MissingServletRequestParameterException.class})
+    public ModelAndView handleInvalidParameter(Exception exception, HttpServletRequest request) {
+        return errorView(HttpStatus.BAD_REQUEST,
+                "Tham so gui len khong hop le. Vui long kiem tra lai gia tri da chon.", request);
     }
 
     /** Che thong tin noi bo khi he thong gap loi khong mong muon. */

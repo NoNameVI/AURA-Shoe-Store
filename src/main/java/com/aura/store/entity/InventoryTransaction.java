@@ -19,7 +19,7 @@ import lombok.Setter;
 @Setter
 @NoArgsConstructor
 @Entity
-@Table(name = "inventory_transactions")
+@Table(name = "inventory_transaction")
 public class InventoryTransaction extends CreatedAtEntity {
 
     @Id
